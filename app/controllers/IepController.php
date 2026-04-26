@@ -30,7 +30,7 @@ class IepController extends Controller
      */
     public function scheduleMeeting()
     {
-        $this->requireSpedRole(['sped_teacher']);
+        $this->requireSpedRole(['sped_teacher', 'admin']);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return $this->handleMeetingScheduling();
@@ -192,7 +192,7 @@ class IepController extends Controller
      */
     public function recordMeeting($meetingId = null)
     {
-        $this->requireSpedRole(['sped_teacher']);
+        $this->requireSpedRole(['sped_teacher', 'admin']);
 
         if (!$meetingId) {
             $this->redirect('/iep/meetings?error=invalid_meeting');
@@ -294,7 +294,7 @@ class IepController extends Controller
      */
     public function createIep($learnerId = null)
     {
-        $this->requireSpedRole(['sped_teacher']);
+        $this->requireSpedRole(['sped_teacher', 'admin']);
 
         if (!$learnerId) {
             $this->redirect('/iep/list?error=invalid_learner');
@@ -412,7 +412,7 @@ class IepController extends Controller
      */
     public function approve($iepId = null)
     {
-        $this->requireSpedRole(['principal']);
+        $this->requireSpedRole(['principal', 'admin']);
 
         if (!$iepId) {
             $this->redirect('/iep/pending?error=invalid_iep');
@@ -486,7 +486,7 @@ class IepController extends Controller
      */
     public function reject($iepId = null)
     {
-        $this->requireSpedRole(['principal']);
+        $this->requireSpedRole(['principal', 'admin']);
 
         if (!$iepId) {
             $this->redirect('/iep/pending?error=invalid_iep');
@@ -561,7 +561,7 @@ class IepController extends Controller
     {
         $userRole = $_SESSION['role'];
         
-        if ($userRole === 'sped_teacher') {
+        if ($userRole === 'sped_teacher' || $userRole === 'admin') {
             $meetings = $this->iepMeeting->getByStatus('scheduled');
         } else {
             $meetings = $this->iepMeeting->getForUser($_SESSION['user_id']);
@@ -580,7 +580,7 @@ class IepController extends Controller
     {
         $userRole = $_SESSION['role'];
         
-        if ($userRole === 'principal') {
+        if ($userRole === 'principal' || $userRole === 'admin') {
             $ieps = $this->iep->getPendingApproval();
         } else {
             $ieps = $this->iep->getByCreator($_SESSION['user_id']);

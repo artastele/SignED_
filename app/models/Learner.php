@@ -227,4 +227,16 @@ class Learner extends Model
 
         return $stmt->fetch(PDO::FETCH_OBJ);
     }
+
+    /**
+     * Get total learner count
+     */
+    public function getTotalCount()
+    {
+        $sql = "SELECT COUNT(*) as total FROM learners";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_OBJ);
+        return $result->total;
+    }
 }

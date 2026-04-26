@@ -30,7 +30,7 @@
             </p>
         </div>
         <div class="btn-toolbar mb-2 mb-md-0">
-            <a href="<?php echo URLROOT; ?>/sped/dashboard" class="btn btn-outline-secondary">
+            <a href="<?php echo URLROOT; ?>/<?php echo $data['role'] === 'admin' ? 'admin' : 'sped'; ?>/dashboard" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
             </a>
         </div>

@@ -270,4 +270,16 @@ class Iep extends Model
         $result = $stmt->fetch(PDO::FETCH_OBJ);
         return $result->count;
     }
+
+    /**
+     * Get count of active IEPs
+     */
+    public function getActiveCount()
+    {
+        $sql = "SELECT COUNT(*) as count FROM ieps WHERE status = 'active'";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_OBJ);
+        return $result->count;
+    }
 }

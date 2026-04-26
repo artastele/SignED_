@@ -231,4 +231,22 @@ class Enrollment extends Model
         $result = $stmt->fetch(PDO::FETCH_OBJ);
         return $result->count;
     }
+
+    /**
+     * Get recent enrollments
+     */
+    public function getRecent($limit = 5)
+    {
+        $sql = "SELECT e.*, u.fullname as parent_name 
+                FROM enrollments e 
+                JOIN users u ON e.parent_id = u.id 
+                ORDER BY e.created_at DESC 
+                LIMIT :limit";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
 }

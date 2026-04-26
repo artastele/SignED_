@@ -16,7 +16,7 @@
             <p class="text-muted mb-0">Assign new learning materials to support IEP objectives</p>
         </div>
         <div class="btn-toolbar mb-2 mb-md-0">
-            <a href="<?php echo URLROOT; ?>/sped/dashboard" class="btn btn-outline-secondary">
+            <a href="<?php echo URLROOT; ?>/<?php echo $data['role'] === 'admin' ? 'admin' : 'sped'; ?>/dashboard" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
             </a>
         </div>
@@ -41,7 +41,7 @@
                     <h5 class="text-muted">No Active IEPs Found</h5>
                     <p class="text-muted mb-4">There are no active IEPs available for material assignment.<br>
                     Please ensure learners have approved and active IEPs before uploading materials.</p>
-                    <a href="<?php echo URLROOT; ?>/sped/dashboard" class="btn btn-secondary">
+                    <a href="<?php echo URLROOT; ?>/<?php echo $data['role'] === 'admin' ? 'admin' : 'sped'; ?>/dashboard" class="btn btn-secondary">
                         <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
                     </a>
                 </div>

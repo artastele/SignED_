@@ -27,7 +27,7 @@ class AssessmentController extends Controller
      */
     public function list()
     {
-        $this->requireSpedTeacher();
+        $this->requireSpedRole(['sped_teacher', 'admin']);
 
         // Get learners ready for assessment (status: enrolled)
         $learners = $this->learnerModel->getReadyForAssessment();
@@ -60,7 +60,7 @@ class AssessmentController extends Controller
      */
     public function create()
     {
-        $this->requireSpedTeacher();
+        $this->requireSpedRole(['sped_teacher', 'admin']);
 
         $learnerId = $_GET['learner_id'] ?? null;
         if (!$learnerId) {
@@ -180,7 +180,7 @@ class AssessmentController extends Controller
      */
     public function save()
     {
-        $this->requireSpedTeacher();
+        $this->requireSpedRole(['sped_teacher', 'admin']);
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             die('Invalid request method');
@@ -241,7 +241,7 @@ class AssessmentController extends Controller
      */
     public function myAssessments()
     {
-        $this->requireSpedTeacher();
+        $this->requireSpedRole(['sped_teacher', 'admin']);
 
         $assessorId = $this->getCurrentUserId();
         $assessments = $this->assessmentModel->getByAssessor($assessorId);

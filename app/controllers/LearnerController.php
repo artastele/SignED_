@@ -132,7 +132,7 @@ class LearnerController extends Controller
      */
     public function uploadMaterial()
     {
-        $this->requireSpedRole(['sped_teacher']);
+        $this->requireSpedRole(['sped_teacher', 'admin']);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return $this->handleMaterialUpload();

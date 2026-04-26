@@ -184,4 +184,50 @@ public function getSpedUserCount()
     $result = $stmt->fetch(PDO::FETCH_OBJ);
     return $result->total;
 }
+
+/**
+ * Get total user count
+ */
+public function getTotalCount()
+{
+    $sql = "SELECT COUNT(*) as total FROM users";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_OBJ);
+    return $result->total;
+}
+
+/**
+ * Get user count by role
+ */
+public function getUserCountByRole()
+{
+    $sql = "SELECT role, COUNT(*) as count FROM users GROUP BY role";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute();
+    
+    $results = $stmt->fetchAll(PDO::FETCH_OBJ);
+    $counts = [];
+    foreach ($results as $row) {
+        $counts[$row->role] = $row->count;
+    }
+    return $counts;
+}
+
+/**
+ * Get recent users
+ */
+public function getRecentUsers($limit = 5)
+{
+    $sql = "SELECT id, fullname, email, role, is_verified, created_at 
+            FROM users 
+            ORDER BY created_at DESC 
+            LIMIT :limit";
+    
+    $stmt = $this->db->prepare($sql);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->execute();
+    
+    return $stmt->fetchAll(PDO::FETCH_OBJ);
+}
 }

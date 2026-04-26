@@ -620,6 +620,14 @@ class AuditLog extends Model
     }
 
     /**
+     * Get recent audit logs (alias for getRecentActivity)
+     */
+    public function getRecent($limit = 50)
+    {
+        return $this->getRecentActivity($limit);
+    }
+
+    /**
      * Generic log method for controller use
      */
     public function log($userId, $actionType, $entityType = null, $entityId = null, $oldValue = null, $newValue = null, $ipAddress = null, $userAgent = null)
