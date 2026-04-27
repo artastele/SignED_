@@ -187,6 +187,8 @@
         <?php endif; ?>
         
         <form method="POST" action="<?php echo URLROOT; ?>/enrollment/submit">
+            <?php include '../app/views/partials/csrf_token.php'; ?>
+            
             <div class="form-group">
                 <label for="first_name">Child's First Name <span class="required">*</span></label>
                 <input type="text" id="first_name" name="first_name" required 

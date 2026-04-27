@@ -63,53 +63,56 @@ class EnrollmentController extends Controller
      */
     private function handleBeefSubmission()
     {
-        // Validate session integrity
-        if (!$this->validateSessionIntegrity()) {
-            header('Location: ' . URLROOT . '/auth/login?error=session_invalid');
-            exit;
-        }
-
         try {
             $parentId = $this->getCurrentUserId();
 
-            // Check if this is a returning student
-            $isReturning = isset($_POST['is_returning']) && $_POST['is_returning'] == '1';
-            $previousLrn = $isReturning ? trim($_POST['previous_lrn'] ?? '') : null;
-
-            // Collect learner data
+            // Collect all BEEF form data
             $learnerData = [
-                'first_name' => trim($_POST['learner_first_name']),
-                'middle_name' => trim($_POST['learner_middle_name'] ?? ''),
-                'last_name' => trim($_POST['learner_last_name']),
-                'suffix' => trim($_POST['learner_suffix'] ?? ''),
-                'date_of_birth' => $_POST['learner_dob'],
-                'gender' => $_POST['learner_gender'],
+                'first_name' => trim($_POST['first_name'] ?? ''),
+                'middle_name' => trim($_POST['middle_name'] ?? ''),
+                'last_name' => trim($_POST['last_name'] ?? ''),
+                'suffix' => trim($_POST['extension_name'] ?? ''),
+                'date_of_birth' => $_POST['date_of_birth'] ?? null,
+                'gender' => $_POST['gender'] ?? null,
                 'place_of_birth' => trim($_POST['place_of_birth'] ?? ''),
                 'nationality' => trim($_POST['nationality'] ?? 'Filipino'),
                 'religion' => trim($_POST['religion'] ?? ''),
                 'mother_tongue' => trim($_POST['mother_tongue'] ?? ''),
                 'indigenous_people' => trim($_POST['indigenous_people'] ?? ''),
                 'is_4ps_beneficiary' => isset($_POST['is_4ps']) ? 1 : 0,
-                'grade_level' => $_POST['learner_grade']
+                'grade_level' => $_POST['grade_level'] ?? null
             ];
 
             // Collect parent/guardian data
             $parentData = [
-                'father_name' => trim($_POST['father_name'] ?? ''),
+                'father_name' => trim(($_POST['father_first_name'] ?? '') . ' ' . 
+                                     ($_POST['father_middle_name'] ?? '') . ' ' . 
+                                     ($_POST['father_last_name'] ?? '')),
                 'father_occupation' => trim($_POST['father_occupation'] ?? ''),
                 'father_contact' => trim($_POST['father_contact'] ?? ''),
-                'mother_name' => trim($_POST['mother_name'] ?? ''),
+                'mother_name' => trim(($_POST['mother_first_name'] ?? '') . ' ' . 
+                                     ($_POST['mother_middle_name'] ?? '') . ' ' . 
+                                     ($_POST['mother_last_name'] ?? '')),
                 'mother_occupation' => trim($_POST['mother_occupation'] ?? ''),
                 'mother_contact' => trim($_POST['mother_contact'] ?? ''),
                 'guardian_name' => trim($_POST['guardian_name'] ?? ''),
                 'guardian_relationship' => trim($_POST['guardian_relationship'] ?? ''),
                 'guardian_contact' => trim($_POST['guardian_contact'] ?? ''),
-                'home_address' => trim($_POST['home_address'] ?? ''),
-                'contact_number' => trim($_POST['contact_number'] ?? '')
+                'home_address' => trim($_POST['current_house_no'] ?? '') . ' ' . 
+                                 trim($_POST['current_street'] ?? '') . ', ' .
+                                 trim($_POST['current_barangay'] ?? '') . ', ' .
+                                 trim($_POST['current_city'] ?? '') . ', ' .
+                                 trim($_POST['current_province'] ?? ''),
+                'contact_number' => trim($_POST['mother_contact'] ?? $_POST['father_contact'] ?? $_POST['guardian_contact'] ?? '')
             ];
 
             // Store complete BEEF data as JSON
-            $beefData = array_merge($learnerData, $parentData);
+            $beefData = array_merge($learnerData, $parentData, [
+                'school_year' => $_POST['school_year'] ?? '',
+                'student_type' => $_POST['student_type'] ?? 'new',
+                'psa_birth_cert' => $_POST['psa_birth_cert'] ?? '',
+                'lrn' => $_POST['lrn'] ?? ''
+            ]);
 
             // Create enrollment record
             $enrollmentData = [
@@ -119,8 +122,8 @@ class EnrollmentController extends Controller
                 'learner_dob' => $learnerData['date_of_birth'],
                 'learner_grade' => $learnerData['grade_level'],
                 'beef_data' => json_encode($beefData),
-                'is_returning_student' => $isReturning ? 1 : 0,
-                'previous_lrn' => $previousLrn,
+                'is_returning_student' => ($_POST['student_type'] ?? 'new') === 'old' ? 1 : 0,
+                'previous_lrn' => $_POST['lrn'] ?? null,
                 'parent_contact_number' => $parentData['contact_number'],
                 'parent_address' => $parentData['home_address']
             ];
@@ -146,13 +149,8 @@ class EnrollmentController extends Controller
             exit;
 
         } catch (Exception $e) {
-            $errorResponse = $this->errorHandler->handleError(
-                $e,
-                'enrollment',
-                $this->getCurrentUserId(),
-                ['action' => 'submit_beef']
-            );
-            $this->showBeefForm($errorResponse);
+            error_log("BEEF Submission Error: " . $e->getMessage());
+            $this->showBeefForm(['error' => $e->getMessage()]);
         }
     }
 

@@ -59,6 +59,9 @@
 
     <?php include '../app/views/partials/simple_popup.php'; ?>
 
+    <!-- jQuery (required for Select2) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
     <!-- Select2 CSS for Better Dropdowns -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
@@ -184,7 +187,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Birthdate <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" name="birthdate" id="birthdate" required>
+                            <input type="date" class="form-control" name="date_of_birth" id="birthdate" required>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Age</label>
@@ -197,11 +200,11 @@
                             <label class="form-label">Sex <span class="text-danger">*</span></label>
                             <div class="d-flex gap-3 mt-2">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="sex" id="sex_male" value="Male" required>
+                                    <input class="form-check-input" type="radio" name="gender" id="sex_male" value="Male" required>
                                     <label class="form-check-label" for="sex_male">Male</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="sex" id="sex_female" value="Female" required>
+                                    <input class="form-check-input" type="radio" name="gender" id="sex_female" value="Female" required>
                                     <label class="form-check-label" for="sex_female">Female</label>
                                 </div>
                             </div>
@@ -327,8 +330,8 @@
                         </div>
                         <div class="col-md-5">
                             <label class="form-label">Barangay <span class="text-danger">*</span></label>
-                            <select class="form-select" name="current_barangay" id="current_barangay" required>
-                                <option value="">Select Barangay</option>
+                            <select class="form-select" name="current_barangay" id="current_barangay" required disabled>
+                                <option value="">Select City First</option>
                             </select>
                         </div>
                     </div>
@@ -336,8 +339,8 @@
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label">Municipality/City <span class="text-danger">*</span></label>
-                            <select class="form-select" name="current_city" id="current_city" required>
-                                <option value="">Select Municipality/City</option>
+                            <select class="form-select" name="current_city" id="current_city" required disabled>
+                                <option value="">Select Province First</option>
                             </select>
                         </div>
                         <div class="col-md-3">
@@ -382,8 +385,8 @@
                             </div>
                             <div class="col-md-5">
                                 <label class="form-label">Barangay</label>
-                                <select class="form-select" name="permanent_barangay" id="permanent_barangay">
-                                    <option value="">Select Barangay</option>
+                                <select class="form-select" name="permanent_barangay" id="permanent_barangay" disabled>
+                                    <option value="">Select City First</option>
                                 </select>
                             </div>
                         </div>
@@ -391,8 +394,8 @@
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label class="form-label">Municipality/City</label>
-                                <select class="form-select" name="permanent_city" id="permanent_city">
-                                    <option value="">Select Municipality/City</option>
+                                <select class="form-select" name="permanent_city" id="permanent_city" disabled>
+                                    <option value="">Select Province First</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
@@ -911,7 +914,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Initialize Select2 on all location dropdowns
 function initializeSelect2() {
-    // Current Address
+    // Current Address - Only initialize province (cities/barangays will be initialized when enabled)
     $('#current_province').select2({
         theme: 'bootstrap-5',
         placeholder: 'Type to search province...',
@@ -919,38 +922,10 @@ function initializeSelect2() {
         width: '100%'
     });
     
-    $('#current_city').select2({
-        theme: 'bootstrap-5',
-        placeholder: 'Type to search city/municipality...',
-        allowClear: true,
-        width: '100%'
-    });
-    
-    $('#current_barangay').select2({
-        theme: 'bootstrap-5',
-        placeholder: 'Type to search barangay...',
-        allowClear: true,
-        width: '100%'
-    });
-    
-    // Permanent Address
+    // Permanent Address - Only initialize province
     $('#permanent_province').select2({
         theme: 'bootstrap-5',
         placeholder: 'Type to search province...',
-        allowClear: true,
-        width: '100%'
-    });
-    
-    $('#permanent_city').select2({
-        theme: 'bootstrap-5',
-        placeholder: 'Type to search city/municipality...',
-        allowClear: true,
-        width: '100%'
-    });
-    
-    $('#permanent_barangay').select2({
-        theme: 'bootstrap-5',
-        placeholder: 'Type to search barangay...',
         allowClear: true,
         width: '100%'
     });
@@ -995,32 +970,43 @@ document.getElementById('current_province').addEventListener('change', async fun
     const selectedOption = this.options[this.selectedIndex];
     const provinceCode = selectedOption.dataset.code;
     
-    if (!provinceCode) return;
-    
     const citySelect = document.getElementById('current_city');
-    citySelect.innerHTML = '<option value="">Select Municipality/City</option>';
-    citySelect.disabled = true;
-    
-    // Clear barangay
     const barangaySelect = document.getElementById('current_barangay');
-    barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
+    
+    // Reset city and barangay
+    citySelect.innerHTML = '<option value="">Select Municipality/City</option>';
+    barangaySelect.innerHTML = '<option value="">Select City First</option>';
+    
+    if (!provinceCode) {
+        citySelect.disabled = true;
+        barangaySelect.disabled = true;
+        return;
+    }
+    
+    // Show loading
+    citySelect.innerHTML = '<option value="">Loading cities...</option>';
+    citySelect.disabled = true;
     barangaySelect.disabled = true;
     
     try {
         const response = await fetch(`${PSGC_API}/provinces/${provinceCode}/cities-municipalities/`);
         const cities = await response.json();
         
+        // Clear and populate cities
+        citySelect.innerHTML = '<option value="">Select Municipality/City</option>';
         cities.forEach(city => {
             const option = new Option(city.name, city.name);
             option.dataset.code = city.code;
             citySelect.add(option);
         });
         
+        // Simply enable the dropdown - NO Select2
         citySelect.disabled = false;
-        reinitializeSelect2('current_city');
-        reinitializeSelect2('current_barangay');
+        
     } catch (error) {
         console.error('Error loading cities:', error);
+        citySelect.innerHTML = '<option value="">Error loading cities</option>';
+        citySelect.disabled = false;
         alert('Failed to load cities. Please try again.');
     }
 });
@@ -1030,25 +1016,38 @@ document.getElementById('current_city').addEventListener('change', async functio
     const selectedOption = this.options[this.selectedIndex];
     const cityCode = selectedOption.dataset.code;
     
-    if (!cityCode) return;
-    
     const barangaySelect = document.getElementById('current_barangay');
+    
+    // Reset barangay
     barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
+    
+    if (!cityCode) {
+        barangaySelect.disabled = true;
+        return;
+    }
+    
+    // Show loading
+    barangaySelect.innerHTML = '<option value="">Loading barangays...</option>';
     barangaySelect.disabled = true;
     
     try {
         const response = await fetch(`${PSGC_API}/cities-municipalities/${cityCode}/barangays/`);
         const barangays = await response.json();
         
+        // Clear and populate barangays
+        barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
         barangays.forEach(barangay => {
             const option = new Option(barangay.name, barangay.name);
             barangaySelect.add(option);
         });
         
+        // Simply enable the dropdown - NO Select2
         barangaySelect.disabled = false;
-        reinitializeSelect2('current_barangay');
+        
     } catch (error) {
         console.error('Error loading barangays:', error);
+        barangaySelect.innerHTML = '<option value="">Error loading barangays</option>';
+        barangaySelect.disabled = false;
         alert('Failed to load barangays. Please try again.');
     }
 });
@@ -1058,32 +1057,43 @@ document.getElementById('permanent_province').addEventListener('change', async f
     const selectedOption = this.options[this.selectedIndex];
     const provinceCode = selectedOption.dataset.code;
     
-    if (!provinceCode) return;
-    
     const citySelect = document.getElementById('permanent_city');
-    citySelect.innerHTML = '<option value="">Select Municipality/City</option>';
-    citySelect.disabled = true;
-    
-    // Clear barangay
     const barangaySelect = document.getElementById('permanent_barangay');
+    
+    // Reset city and barangay
+    citySelect.innerHTML = '<option value="">Select Municipality/City</option>';
     barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
+    
+    if (!provinceCode) {
+        citySelect.disabled = true;
+        barangaySelect.disabled = true;
+        return;
+    }
+    
+    // Show loading
+    citySelect.innerHTML = '<option value="">Loading cities...</option>';
+    citySelect.disabled = true;
     barangaySelect.disabled = true;
     
     try {
         const response = await fetch(`${PSGC_API}/provinces/${provinceCode}/cities-municipalities/`);
         const cities = await response.json();
         
+        // Clear and populate cities
+        citySelect.innerHTML = '<option value="">Select Municipality/City</option>';
         cities.forEach(city => {
             const option = new Option(city.name, city.name);
             option.dataset.code = city.code;
             citySelect.add(option);
         });
         
+        // Simply enable the dropdown - NO Select2
         citySelect.disabled = false;
-        reinitializeSelect2('permanent_city');
-        reinitializeSelect2('permanent_barangay');
+        
     } catch (error) {
         console.error('Error loading cities:', error);
+        citySelect.innerHTML = '<option value="">Error loading cities</option>';
+        citySelect.disabled = false;
         alert('Failed to load cities. Please try again.');
     }
 });
@@ -1093,25 +1103,38 @@ document.getElementById('permanent_city').addEventListener('change', async funct
     const selectedOption = this.options[this.selectedIndex];
     const cityCode = selectedOption.dataset.code;
     
-    if (!cityCode) return;
-    
     const barangaySelect = document.getElementById('permanent_barangay');
+    
+    // Reset barangay
     barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
+    
+    if (!cityCode) {
+        barangaySelect.disabled = true;
+        return;
+    }
+    
+    // Show loading
+    barangaySelect.innerHTML = '<option value="">Loading barangays...</option>';
     barangaySelect.disabled = true;
     
     try {
         const response = await fetch(`${PSGC_API}/cities-municipalities/${cityCode}/barangays/`);
         const barangays = await response.json();
         
+        // Clear and populate barangays
+        barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
         barangays.forEach(barangay => {
             const option = new Option(barangay.name, barangay.name);
             barangaySelect.add(option);
         });
         
+        // Simply enable the dropdown - NO Select2
         barangaySelect.disabled = false;
-        reinitializeSelect2('permanent_barangay');
+        
     } catch (error) {
         console.error('Error loading barangays:', error);
+        barangaySelect.innerHTML = '<option value="">Error loading barangays</option>';
+        barangaySelect.disabled = false;
         alert('Failed to load barangays. Please try again.');
     }
 });
@@ -1147,8 +1170,10 @@ document.getElementById('same_address').addEventListener('change', function() {
     }
 });
 
-// Form Validation
+// Form Validation and Confirmation
 document.getElementById('beefForm').addEventListener('submit', function(e) {
+    e.preventDefault(); // Always prevent default first
+    
     const requiredFields = this.querySelectorAll('[required]');
     let isValid = true;
     
@@ -1168,18 +1193,100 @@ document.getElementById('beefForm').addEventListener('submit', function(e) {
     });
     
     if (!isValid) {
-        e.preventDefault();
         alert('Please fill out all required fields.');
         return false;
     }
     
     // Check if terms are agreed
     if (!document.getElementById('agree_terms').checked) {
-        e.preventDefault();
         alert('Please agree to the certification before submitting.');
         return false;
     }
+    
+    // Show confirmation modal
+    showConfirmationModal(this);
 });
+
+// Confirmation Modal Function
+function showConfirmationModal(form) {
+    const learnerName = document.getElementById('first_name').value + ' ' + 
+                       (document.getElementById('middle_name').value ? document.getElementById('middle_name').value + ' ' : '') +
+                       document.getElementById('last_name').value;
+    const gradeLevel = document.getElementById('grade_level').value;
+    
+    const modalHTML = `
+        <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="confirmationModalLabel">
+                            <i class="bi bi-check-circle me-2"></i>Confirm Enrollment Submission
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Please review before submitting:</strong>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6 class="text-muted mb-2">Learner Information:</h6>
+                            <p class="mb-1"><strong>Name:</strong> ${learnerName}</p>
+                            <p class="mb-1"><strong>Grade Level:</strong> ${gradeLevel}</p>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <small>Once submitted, you will need to upload the required documents to complete the enrollment process.</small>
+                        </div>
+                        
+                        <p class="mb-0"><strong>Are you sure you want to submit this enrollment?</strong></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>Cancel
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="confirmSubmit()">
+                            <i class="bi bi-check-circle me-1"></i>Yes, Submit
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('confirmationModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+    modal.show();
+    
+    // Store form reference
+    window.beefFormToSubmit = form;
+}
+
+// Confirm and submit
+function confirmSubmit() {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
+    modal.hide();
+    
+    // Submit the form
+    if (window.beefFormToSubmit) {
+        // Remove the event listener temporarily to allow actual submission
+        const form = window.beefFormToSubmit;
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
+        newForm.submit();
+    }
+}
 </script>
 
 <?php require_once '../app/views/layouts/footer.php'; ?>

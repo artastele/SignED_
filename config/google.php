@@ -2,8 +2,8 @@
 
 // Google OAuth Configuration
 // FIXED: Swapped the Client ID and Secret to correct positions
-define('GOOGLE_CLIENT_ID', 'secret');
-define('GOOGLE_CLIENT_SECRET', 'secret');
+define('GOOGLE_CLIENT_ID', '262376879974-5pd504lbt1acfppd0j71mo81lhl34jd9.apps.googleusercontent.com');
+define('GOOGLE_CLIENT_SECRET', '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');
 define('GOOGLE_REDIRECT_URI', URLROOT . '/auth/googleCallback');
 
 // Google OAuth URLs

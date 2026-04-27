@@ -75,7 +75,10 @@ class AuthController extends Controller
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-            $fullname = trim($_POST['fullname']);
+            $firstName = trim($_POST['first_name']);
+            $middleName = !empty($_POST['middle_name']) ? trim($_POST['middle_name']) : null;
+            $lastName = trim($_POST['last_name']);
+            $suffix = !empty($_POST['suffix']) ? trim($_POST['suffix']) : null;
             $email = trim($_POST['email']);
             $password = $_POST['password'];
             $confirmPassword = $_POST['confirm_password'];
@@ -105,7 +108,10 @@ class AuthController extends Controller
             $otpExpiresAt = date('Y-m-d H:i:s', strtotime('+10 minutes'));
 
             $data = [
-                'fullname' => $fullname,
+                'first_name' => $firstName,
+                'middle_name' => $middleName,
+                'last_name' => $lastName,
+                'suffix' => $suffix,
                 'email' => $email,
                 'password' => password_hash($password, PASSWORD_DEFAULT),
                 'role' => $role, // Allow role to be set during registration
@@ -219,13 +225,14 @@ class AuthController extends Controller
                         // Create a basic learner record
                         // Note: This requires additional information to be collected later
                         $user = $userModel->getUserById($_SESSION['user_id']);
-                        $nameParts = explode(' ', $user->fullname, 2);
                         
                         $learnerData = [
                             'user_id' => $_SESSION['user_id'],
                             'parent_id' => null, // To be filled later
-                            'first_name' => $nameParts[0] ?? 'Unknown',
-                            'last_name' => $nameParts[1] ?? 'Unknown',
+                            'first_name' => $user->first_name ?? 'Unknown',
+                            'middle_name' => $user->middle_name,
+                            'last_name' => $user->last_name ?? 'Unknown',
+                            'suffix' => $user->suffix,
                             'date_of_birth' => null, // To be filled later
                             'grade_level' => null, // To be filled later
                             'status' => 'pending_info' // New status for incomplete profiles

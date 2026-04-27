@@ -57,13 +57,45 @@
                 <div class="card-body">
                     <form method="POST" action="<?php echo URLROOT; ?>/user/updateProfile">
                         <div class="mb-3">
-                            <label for="fullname" class="form-label">Full Name</label>
+                            <label for="first_name" class="form-label">First Name</label>
                             <input type="text" 
                                    class="form-control" 
-                                   id="fullname" 
-                                   name="fullname" 
-                                   value="<?php echo htmlspecialchars($data['user']->fullname ?? ''); ?>" 
+                                   id="first_name" 
+                                   name="first_name" 
+                                   value="<?php echo htmlspecialchars($data['user']->first_name ?? ''); ?>" 
                                    required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="middle_name" class="form-label">Middle Name</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="middle_name" 
+                                   name="middle_name" 
+                                   value="<?php echo htmlspecialchars($data['user']->middle_name ?? ''); ?>">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="last_name" class="form-label">Last Name</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="last_name" 
+                                   name="last_name" 
+                                   value="<?php echo htmlspecialchars($data['user']->last_name ?? ''); ?>" 
+                                   required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="suffix" class="form-label">Suffix</label>
+                            <select class="form-control" id="suffix" name="suffix">
+                                <option value="">None</option>
+                                <option value="Jr." <?php echo ($data['user']->suffix ?? '') == 'Jr.' ? 'selected' : ''; ?>>Jr.</option>
+                                <option value="Sr." <?php echo ($data['user']->suffix ?? '') == 'Sr.' ? 'selected' : ''; ?>>Sr.</option>
+                                <option value="II" <?php echo ($data['user']->suffix ?? '') == 'II' ? 'selected' : ''; ?>>II</option>
+                                <option value="III" <?php echo ($data['user']->suffix ?? '') == 'III' ? 'selected' : ''; ?>>III</option>
+                                <option value="IV" <?php echo ($data['user']->suffix ?? '') == 'IV' ? 'selected' : ''; ?>>IV</option>
+                                <option value="V" <?php echo ($data['user']->suffix ?? '') == 'V' ? 'selected' : ''; ?>>V</option>
+                            </select>
                         </div>
 
                         <div class="mb-3">

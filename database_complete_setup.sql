@@ -24,7 +24,18 @@ USE signed_system;
 -- ============================================
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    fullname VARCHAR(100) NOT NULL,
+    first_name VARCHAR(50) NOT NULL,
+    middle_name VARCHAR(50) NULL,
+    last_name VARCHAR(50) NOT NULL,
+    suffix VARCHAR(10) NULL COMMENT 'Jr., Sr., III, etc.',
+    fullname VARCHAR(100) GENERATED ALWAYS AS (
+        CONCAT_WS(' ', 
+            first_name, 
+            middle_name, 
+            last_name,
+            CASE WHEN suffix IS NOT NULL THEN suffix ELSE NULL END
+        )
+    ) STORED,
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NULL,
     google_id VARCHAR(255) NULL,
@@ -43,7 +54,9 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_role (role),
     INDEX idx_email (email),
-    INDEX idx_auth_provider (auth_provider)
+    INDEX idx_auth_provider (auth_provider),
+    INDEX idx_first_name (first_name),
+    INDEX idx_last_name (last_name)
 );
 
 -- ============================================
@@ -458,9 +471,9 @@ CREATE TABLE IF NOT EXISTS file_uploads (
 -- ============================================
 
 -- Insert default admin user
-INSERT INTO users (fullname, email, password, role, is_verified, auth_provider) 
-VALUES ('System Administrator', 'admin@signed.local', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 1, 'local')
-ON DUPLICATE KEY UPDATE fullname = fullname;
+INSERT INTO users (first_name, last_name, email, password, role, is_verified, auth_provider) 
+VALUES ('System', 'Administrator', 'admin@signed.local', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 1, 'local')
+ON DUPLICATE KEY UPDATE first_name = first_name;
 -- Default password: password (CHANGE THIS IMMEDIATELY!)
 
 -- Insert default system settings

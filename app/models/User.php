@@ -4,13 +4,16 @@ class User extends Model
 {
     public function register($data)
     {
-        $sql = "INSERT INTO users (fullname, email, password, role, auth_provider, is_verified, otp_code, otp_expires_at)
-                VALUES (:fullname, :email, :password, :role, :auth_provider, :is_verified, :otp_code, :otp_expires_at)";
+        $sql = "INSERT INTO users (first_name, middle_name, last_name, suffix, email, password, role, auth_provider, is_verified, otp_code, otp_expires_at)
+                VALUES (:first_name, :middle_name, :last_name, :suffix, :email, :password, :role, :auth_provider, :is_verified, :otp_code, :otp_expires_at)";
 
         $stmt = $this->db->prepare($sql);
 
         return $stmt->execute([
-            ':fullname' => $data['fullname'],
+            ':first_name' => $data['first_name'],
+            ':middle_name' => $data['middle_name'],
+            ':last_name' => $data['last_name'],
+            ':suffix' => $data['suffix'],
             ':email' => $data['email'],
             ':password' => $data['password'],
             ':role' => $data['role'] ?? null,
@@ -23,13 +26,16 @@ class User extends Model
 
     public function createUser($data)
     {
-        $sql = "INSERT INTO users (fullname, email, password, role, auth_provider, is_verified)
-                VALUES (:fullname, :email, :password, :role, :auth_provider, :is_verified)";
+        $sql = "INSERT INTO users (first_name, middle_name, last_name, suffix, email, password, role, auth_provider, is_verified)
+                VALUES (:first_name, :middle_name, :last_name, :suffix, :email, :password, :role, :auth_provider, :is_verified)";
 
         $stmt = $this->db->prepare($sql);
 
         $result = $stmt->execute([
-            ':fullname' => $data['fullname'],
+            ':first_name' => $data['first_name'],
+            ':middle_name' => $data['middle_name'] ?? null,
+            ':last_name' => $data['last_name'],
+            ':suffix' => $data['suffix'] ?? null,
             ':email' => $data['email'],
             ':password' => $data['password'],
             ':role' => $data['role'],
@@ -99,7 +105,7 @@ public function updateRole($userId, $role)
 }
 public function getAllUsers()
 {
-    $sql = "SELECT id, fullname, email, role, is_verified, created_at 
+    $sql = "SELECT id, first_name, middle_name, last_name, suffix, fullname, email, role, is_verified, created_at 
             FROM users 
             ORDER BY id DESC";
 
@@ -149,13 +155,21 @@ public function findUserByGoogleId($googleId)
 
 public function createGoogleUser($googleData)
 {
-    $sql = "INSERT INTO users (fullname, email, google_id, auth_provider, is_verified) 
-            VALUES (:fullname, :email, :google_id, 'google', 1)";
+    // Split Google name into parts (basic split)
+    $nameParts = explode(' ', $googleData['name']);
+    $firstName = $nameParts[0] ?? '';
+    $lastName = count($nameParts) > 1 ? end($nameParts) : '';
+    $middleName = count($nameParts) > 2 ? implode(' ', array_slice($nameParts, 1, -1)) : null;
+    
+    $sql = "INSERT INTO users (first_name, middle_name, last_name, email, google_id, auth_provider, is_verified) 
+            VALUES (:first_name, :middle_name, :last_name, :email, :google_id, 'google', 1)";
 
     $stmt = $this->db->prepare($sql);
 
     return $stmt->execute([
-        ':fullname' => $googleData['name'],
+        ':first_name' => $firstName,
+        ':middle_name' => $middleName,
+        ':last_name' => $lastName,
         ':email' => $googleData['email'],
         ':google_id' => $googleData['id']
     ]);
@@ -219,7 +233,7 @@ public function getUserCountByRole()
  */
 public function getRecentUsers($limit = 5)
 {
-    $sql = "SELECT id, fullname, email, role, is_verified, created_at 
+    $sql = "SELECT id, first_name, middle_name, last_name, suffix, fullname, email, role, is_verified, created_at 
             FROM users 
             ORDER BY created_at DESC 
             LIMIT :limit";
@@ -229,5 +243,34 @@ public function getRecentUsers($limit = 5)
     $stmt->execute();
     
     return $stmt->fetchAll(PDO::FETCH_OBJ);
+}
+
+/**
+ * Update user profile
+ */
+public function updateProfile($userId, $data)
+{
+    $sql = "UPDATE users 
+            SET first_name = :first_name,
+                middle_name = :middle_name,
+                last_name = :last_name,
+                suffix = :suffix,
+                email = :email,
+                phone = :phone,
+                address = :address
+            WHERE id = :id";
+    
+    $stmt = $this->db->prepare($sql);
+    
+    return $stmt->execute([
+        ':first_name' => $data['first_name'],
+        ':middle_name' => $data['middle_name'],
+        ':last_name' => $data['last_name'],
+        ':suffix' => $data['suffix'],
+        ':email' => $data['email'],
+        ':phone' => $data['phone'] ?? null,
+        ':address' => $data['address'] ?? null,
+        ':id' => $userId
+    ]);
 }
 }

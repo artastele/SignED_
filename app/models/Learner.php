@@ -36,7 +36,10 @@ class Learner extends Model
         $tempPassword = bin2hex(random_bytes(8)); // Generate random password
         
         $userData = [
-            'fullname' => $enrollmentData['first_name'] . ' ' . $enrollmentData['last_name'],
+            'first_name' => $enrollmentData['first_name'],
+            'middle_name' => $enrollmentData['middle_name'] ?? null,
+            'last_name' => $enrollmentData['last_name'],
+            'suffix' => $enrollmentData['suffix'] ?? null,
             'email' => $learnerEmail,
             'password' => password_hash($tempPassword, PASSWORD_DEFAULT),
             'role' => 'learner',
