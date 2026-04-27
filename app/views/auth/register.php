@@ -56,14 +56,14 @@
             <div class="password-requirements-modern">
                 <div class="requirements-header">
                     <i class="fas fa-shield-alt"></i>
-                    <span>Password Requirements</span>
+                    <span>Password Strength Indicators</span>
                 </div>
                 <ul id="passwordChecklist">
-                    <li id="req-length"><i class="fas fa-circle"></i> At least 8 characters</li>
-                    <li id="req-uppercase"><i class="fas fa-circle"></i> One uppercase letter (A-Z)</li>
-                    <li id="req-lowercase"><i class="fas fa-circle"></i> One lowercase letter (a-z)</li>
-                    <li id="req-number"><i class="fas fa-circle"></i> One number (0-9)</li>
-                    <li id="req-special"><i class="fas fa-circle"></i> One special character (!@#$%^&*)</li>
+                    <li id="req-length"><i class="fas fa-circle"></i> At least 8 characters <strong>(Required)</strong></li>
+                    <li id="req-uppercase"><i class="fas fa-circle"></i> One uppercase letter (A-Z) <em>(Optional)</em></li>
+                    <li id="req-lowercase"><i class="fas fa-circle"></i> One lowercase letter (a-z) <em>(Optional)</em></li>
+                    <li id="req-number"><i class="fas fa-circle"></i> One number (0-9) <em>(Optional)</em></li>
+                    <li id="req-special"><i class="fas fa-circle"></i> One special character (!@#$%^&*) <em>(Optional)</em></li>
                 </ul>
             </div>
 
@@ -292,18 +292,10 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
         return false;
     }
     
-    // Check if all requirements are met
-    let allValid = true;
-    for (let key in requirements) {
-        if (!requirements[key].regex.test(password)) {
-            allValid = false;
-            break;
-        }
-    }
-    
-    if (!allValid) {
+    // Only check minimum length requirement (8 characters)
+    if (password.length < 8) {
         e.preventDefault();
-        showPopup('Please meet all password requirements.', 'error');
+        showPopup('Password must be at least 8 characters long.', 'error');
         return false;
     }
 });

@@ -91,9 +91,9 @@ class AuthController extends Controller
                 exit;
             }
 
-            // Enforce password policy
+            // Enforce password policy (only 8 characters minimum required)
             if (!$this->validatePasswordPolicy($password)) {
-                header('Location: ' . URLROOT . '/auth/register?error=' . urlencode('Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.'));
+                header('Location: ' . URLROOT . '/auth/register?error=' . urlencode('Password must be at least 8 characters long.'));
                 exit;
             }
 
@@ -406,31 +406,13 @@ class AuthController extends Controller
 
     /**
      * Validate password policy
+     * Only requires minimum 8 characters
+     * Other requirements (uppercase, lowercase, number, special char) are optional for strength
      */
     private function validatePasswordPolicy($password)
     {
-        // Minimum 8 characters
+        // Only requirement: Minimum 8 characters
         if (strlen($password) < 8) {
-            return false;
-        }
-
-        // At least one uppercase letter
-        if (!preg_match('/[A-Z]/', $password)) {
-            return false;
-        }
-
-        // At least one lowercase letter
-        if (!preg_match('/[a-z]/', $password)) {
-            return false;
-        }
-
-        // At least one number
-        if (!preg_match('/[0-9]/', $password)) {
-            return false;
-        }
-
-        // At least one special character
-        if (!preg_match('/[^A-Za-z0-9]/', $password)) {
             return false;
         }
 
