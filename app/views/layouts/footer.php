@@ -19,7 +19,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Custom JS -->
-    <script src="<?php echo URLROOT; ?>/assets/js/custom.js"></script>
+    <script src="<?php echo ASSETS; ?>/js/custom.js"></script>
     
     <!-- Page-specific scripts -->
     <?php if (isset($data['extra_js'])): ?>

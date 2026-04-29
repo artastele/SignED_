@@ -9,17 +9,39 @@ require_once '../PHPMailer-master/src/Exception.php';
 
 class Mailer
 {
+    private $settings;
+
+    public function __construct()
+    {
+        // Load system settings from database
+        // Load Model.php first before SystemSettings.php (which extends Model)
+        require_once __DIR__ . '/../../core/Model.php';
+        require_once __DIR__ . '/../models/SystemSettings.php';
+        
+        $this->settings = new SystemSettings();
+    }
+
     private function getMailer()
     {
         $mail = new PHPMailer(true);
         
+        // Get SMTP settings from database (or use defaults from config)
+        $smtpHost = $this->settings->get('smtp_host', 'smtp.gmail.com');
+        $smtpPort = $this->settings->get('smtp_port', 587);
+        $smtpFromEmail = $this->settings->get('smtp_from_email', 'noreply@signed.edu');
+        $systemName = $this->settings->get('system_name', 'SignED SPED System');
+        
+        // Get credentials from config file (for security)
+        $smtpUsername = defined('SMTP_USERNAME') ? SMTP_USERNAME : 'allysacanonizado43@gmail.com';
+        $smtpPassword = defined('SMTP_PASSWORD') ? SMTP_PASSWORD : 'csyamuyqsetiwlwy';
+        
         $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com';
+        $mail->Host = $smtpHost;
         $mail->SMTPAuth = true;
-        $mail->Username = 'allysacanonizado43@gmail.com';
-        $mail->Password = 'csyamuyqsetiwlwy';
+        $mail->Username = $smtpUsername;
+        $mail->Password = $smtpPassword;
         $mail->SMTPSecure = 'tls';
-        $mail->Port = 587;
+        $mail->Port = $smtpPort;
         
         $mail->SMTPOptions = [
             'ssl' => [
@@ -29,7 +51,7 @@ class Mailer
             ]
         ];
         
-        $mail->setFrom('allysacanonizado43@gmail.com', 'SignED SPED System');
+        $mail->setFrom($smtpFromEmail, $systemName);
         $mail->isHTML(true);
         
         return $mail;

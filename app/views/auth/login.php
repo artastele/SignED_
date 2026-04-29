@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - SignED</title>
-    <link rel="stylesheet" href="<?php echo URLROOT; ?>/assets/css/style.css">
-    <link rel="stylesheet" href="<?php echo URLROOT; ?>/assets/css/auth-modern.css">
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/public/assets/css/style.css?v=2.0">
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/public/assets/css/auth-modern.css?v=2.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="modern-auth-body">
@@ -13,12 +13,37 @@
 <!-- Include Simple Pop-up -->
 <?php include '../app/views/partials/simple_popup.php'; ?>
 
+<!-- Show error/success messages -->
+<?php if (isset($_GET['error'])): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            showPopup('<?php echo htmlspecialchars($_GET['error']); ?>', 'error');
+        });
+    </script>
+<?php endif; ?>
+
+<?php if (isset($_GET['success'])): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            showPopup('<?php echo htmlspecialchars($_GET['success']); ?>', 'success');
+        });
+    </script>
+<?php endif; ?>
+
+<?php if (isset($_GET['locked']) && $_GET['locked'] == '1'): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            showPopup('Account temporarily locked due to multiple failed login attempts. Please try again in 30 minutes.', 'error');
+        });
+    </script>
+<?php endif; ?>
+
 <div class="modern-auth-wrapper">
     <!-- Left Side - Branding -->
     <div class="auth-branding">
         <div class="branding-content">
             <div class="logo-section">
-                <img src="<?php echo URLROOT; ?>/assets/images/SIGNED%20LOGO.png" alt="SignED Logo" class="brand-logo" onerror="this.style.display='none';">
+                <img src="<?php echo URLROOT; ?>/public/assets/images/SIGNED%20LOGO.png" alt="SignED Logo" class="brand-logo" onerror="this.style.display='none';">
                 <h1 class="brand-title">SignED</h1>
             </div>
             <h2 class="branding-headline">Special Education Management System</h2>
@@ -53,27 +78,32 @@
                 <p>Sign in to access your account</p>
             </div>
 
-            <form action="<?php echo URLROOT; ?>/auth/login" method="POST" class="modern-form">
+            <form action="<?php echo URLROOT; ?>/auth/login" method="POST" class="modern-form" id="loginForm">
                 <div class="input-group">
                     <label for="email">Email Address</label>
                     <div class="input-wrapper">
                         <i class="fas fa-envelope input-icon"></i>
-                        <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                        <input type="email" id="email" name="email" placeholder="you@example.com" 
+                               value="<?php echo isset($_GET['email']) ? htmlspecialchars($_GET['email']) : ''; ?>" 
+                               required autocomplete="email">
                     </div>
+                    <small class="text-danger" id="email-error" style="display: none;"></small>
                 </div>
 
                 <div class="input-group">
                     <label for="password">Password</label>
                     <div class="input-wrapper">
                         <i class="fas fa-lock input-icon"></i>
-                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                        <input type="password" id="password" name="password" placeholder="Enter your password" 
+                               required autocomplete="current-password">
                         <button type="button" class="toggle-password" onclick="togglePassword('password')">
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
+                    <small class="text-danger" id="password-error" style="display: none;"></small>
                 </div>
 
-                <button type="submit" class="btn-primary">
+                <button type="submit" class="btn-primary" id="loginBtn">
                     <span>Sign In</span>
                     <i class="fas fa-arrow-right"></i>
                 </button>
@@ -116,6 +146,81 @@ function togglePassword(inputId) {
         icon.classList.add('fa-eye');
     }
 }
+
+// Form validation
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('loginForm');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const loginBtn = document.getElementById('loginBtn');
+    
+    // Email validation
+    emailInput.addEventListener('blur', function() {
+        const emailError = document.getElementById('email-error');
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        
+        if (!emailRegex.test(this.value)) {
+            emailError.textContent = 'Please enter a valid email address';
+            emailError.style.display = 'block';
+            this.classList.add('is-invalid');
+        } else {
+            emailError.style.display = 'none';
+            this.classList.remove('is-invalid');
+        }
+    });
+    
+    // Form submission
+    loginForm.addEventListener('submit', function(e) {
+        const emailError = document.getElementById('email-error');
+        const passwordError = document.getElementById('password-error');
+        let isValid = true;
+        
+        // Validate email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(emailInput.value)) {
+            emailError.textContent = 'Please enter a valid email address';
+            emailError.style.display = 'block';
+            emailInput.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            emailError.style.display = 'none';
+            emailInput.classList.remove('is-invalid');
+        }
+        
+        // Validate password
+        if (passwordInput.value.length < 1) {
+            passwordError.textContent = 'Password is required';
+            passwordError.style.display = 'block';
+            passwordInput.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            passwordError.style.display = 'none';
+            passwordInput.classList.remove('is-invalid');
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // Disable button and show loading state
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = '<span>Signing in...</span><i class="fas fa-spinner fa-spin"></i>';
+    });
+    
+    // Remember email if previously entered
+    const savedEmail = localStorage.getItem('lastLoginEmail');
+    if (savedEmail && !emailInput.value) {
+        emailInput.value = savedEmail;
+    }
+    
+    // Save email on successful form submission
+    loginForm.addEventListener('submit', function() {
+        if (emailInput.value) {
+            localStorage.setItem('lastLoginEmail', emailInput.value);
+        }
+    });
+});
 </script>
 
 </body>

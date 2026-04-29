@@ -21,7 +21,7 @@ class SpedController extends Controller
         $data = $this->getDashboardData($role);
         
         // Load role-specific dashboard view
-        $this->view('sped/dashboard_bootstrap', $data);
+        $this->view('sped/dashboard', $data);
     }
 
     public function statistics()
@@ -68,6 +68,10 @@ class SpedController extends Controller
             'current_page' => 'dashboard',
             'navigation' => $this->getNavigationItems($role)
         ];
+
+        // Load announcements for all roles
+        $announcementModel = $this->model('Announcement');
+        $data['announcements'] = $announcementModel->getForUser($role);
 
         switch ($role) {
             case 'sped_teacher':

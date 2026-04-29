@@ -1,252 +1,293 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Schedule IEP Meeting - SignED SPED</title>
-    <link rel="stylesheet" href="/assets/css/style.css">
-    <style>
-        .form-container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #1E40AF;
-        }
-        
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        
-        .participants-section {
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 4px;
-            background: #f9f9f9;
-        }
-        
-        .participant-checkbox {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            padding: 8px;
-            background: white;
-            border-radius: 4px;
-        }
-        
-        .participant-checkbox input[type="checkbox"] {
-            width: auto;
-            margin-right: 10px;
-        }
-        
-        .participant-info {
-            flex: 1;
-        }
-        
-        .participant-role {
-            font-size: 12px;
-            color: #666;
-            text-transform: uppercase;
-        }
-        
-        .btn {
-            background: #1E40AF;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .btn:hover {
-            background: #1D4ED8;
-        }
-        
-        .btn-secondary {
-            background: #6B7280;
-        }
-        
-        .btn-secondary:hover {
-            background: #4B5563;
-        }
-        
-        .error {
-            background: #FEE2E2;
-            color: #B91C1C;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        
-        .required {
-            color: #B91C1C;
-        }
-        
-        .datetime-group {
-            display: flex;
-            gap: 15px;
-        }
-        
-        .datetime-group .form-group {
-            flex: 1;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Schedule IEP Meeting</h1>
-            <nav>
-                <a href="/dashboard">Dashboard</a>
-                <a href="/iep/meetings">Meetings</a>
-                <a href="/logout">Logout</a>
-            </nav>
-        </div>
+<?php require_once '../app/views/layouts/header.php'; ?>
 
-        <div class="form-container">
-            <?php if (isset($error)): ?>
-                <div class="error">
-                    <strong>Error:</strong> <?= htmlspecialchars($error) ?>
-                </div>
-            <?php endif; ?>
+<!-- Sidebar -->
+<?php require_once '../app/views/partials/sidebar.php'; ?>
 
-            <form method="POST" action="/iep/schedule-meeting">
-                <div class="form-group">
-                    <label for="learner_id">Select Learner <span class="required">*</span></label>
-                    <select name="learner_id" id="learner_id" required>
-                        <option value="">-- Select Learner --</option>
-                        <?php foreach ($learners as $learner): ?>
-                            <option value="<?= $learner->id ?>" 
-                                    <?= (isset($_POST['learner_id']) && $_POST['learner_id'] == $learner->id) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($learner->first_name . ' ' . $learner->last_name) ?>
-                                (Grade <?= htmlspecialchars($learner->grade_level) ?>)
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="datetime-group">
-                    <div class="form-group">
-                        <label for="meeting_date">Meeting Date <span class="required">*</span></label>
-                        <input type="date" 
-                               name="meeting_date" 
-                               id="meeting_date" 
-                               min="<?= date('Y-m-d', strtotime('+1 day')) ?>"
-                               value="<?= htmlspecialchars($_POST['meeting_date'] ?? '') ?>"
-                               required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="meeting_time">Meeting Time <span class="required">*</span></label>
-                        <input type="time" 
-                               name="meeting_time" 
-                               id="meeting_time"
-                               value="<?= htmlspecialchars($_POST['meeting_time'] ?? '') ?>"
-                               required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="location">Meeting Location <span class="required">*</span></label>
-                    <input type="text" 
-                           name="location" 
-                           id="location" 
-                           placeholder="e.g., Conference Room A, Principal's Office"
-                           value="<?= htmlspecialchars($_POST['location'] ?? '') ?>"
-                           required>
-                </div>
-
-                <div class="form-group">
-                    <label>Meeting Participants <span class="required">*</span></label>
-                    <div class="participants-section">
-                        <p style="margin-bottom: 15px; color: #666; font-size: 14px;">
-                            Select all participants for this IEP meeting. Guidance and Principal are required.
-                        </p>
-                        
-                        <?php 
-                        $selectedParticipants = $_POST['participants'] ?? [];
-                        $roleGroups = [];
-                        foreach ($users as $user) {
-                            $roleGroups[$user->role][] = $user;
-                        }
-                        ?>
-                        
-                        <?php foreach ($roleGroups as $role => $roleUsers): ?>
-                            <h4 style="margin: 15px 0 10px 0; color: #1E40AF; text-transform: capitalize;">
-                                <?= htmlspecialchars($role) ?> 
-                                <?php if (in_array($role, ['guidance', 'principal'])): ?>
-                                    <span class="required">*</span>
-                                <?php endif; ?>
-                            </h4>
-                            
-                            <?php foreach ($roleUsers as $user): ?>
-                                <div class="participant-checkbox">
-                                    <input type="checkbox" 
-                                           name="participants[]" 
-                                           value="<?= $user->id ?>"
-                                           id="participant_<?= $user->id ?>"
-                                           <?= in_array($user->id, $selectedParticipants) ? 'checked' : '' ?>
-                                           <?= in_array($role, ['guidance', 'principal']) ? 'required' : '' ?>>
-                                    <label for="participant_<?= $user->id ?>" class="participant-info">
-                                        <div><?= htmlspecialchars($user->fullname) ?></div>
-                                        <div class="participant-role"><?= htmlspecialchars($user->email) ?></div>
-                                    </label>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-
-                <div class="form-actions" style="margin-top: 30px; text-align: center;">
-                    <button type="submit" class="btn">Schedule Meeting</button>
-                    <a href="/iep/meetings" class="btn btn-secondary" style="margin-left: 10px;">Cancel</a>
-                </div>
-            </form>
-        </div>
+<!-- Main Content -->
+<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+    
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <h1>
+            <i class="bi bi-calendar-event me-2"></i>
+            Schedule IEP Meeting
+        </h1>
+        <p class="mb-0">Schedule meeting for <?php echo htmlspecialchars($data['iep']->first_name . ' ' . $data['iep']->last_name); ?></p>
     </div>
 
-    <script>
-        // Ensure required roles are selected
-        document.querySelector('form').addEventListener('submit', function(e) {
-            const guidanceChecked = document.querySelector('input[name="participants[]"][value*="guidance"]:checked');
-            const principalChecked = document.querySelector('input[name="participants[]"][value*="principal"]:checked');
-            
-            // Get users by role to check if guidance/principal are selected
-            const selectedIds = Array.from(document.querySelectorAll('input[name="participants[]"]:checked'))
-                                     .map(cb => cb.value);
-            
-            if (selectedIds.length === 0) {
-                e.preventDefault();
-                alert('Please select at least one participant for the meeting.');
-                return;
-            }
-            
-            // Additional validation can be added here if needed
-        });
+    <!-- Success/Error Messages -->
+    <?php if (isset($data['error'])): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <?php echo htmlspecialchars($data['error']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
 
-        // Set minimum date to tomorrow
-        document.getElementById('meeting_date').min = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-    </script>
-</body>
-</html>
+    <!-- Meeting Scheduling Form -->
+    <form method="POST" action="<?php echo URLROOT; ?>/iep/scheduleMeeting?iep_id=<?php echo $data['iep']->id; ?>">
+        
+        <!-- Learner Information -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-badge me-2"></i>
+                    Learner Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Full Name</label>
+                        <input type="text" class="form-control bg-light" value="<?php echo htmlspecialchars($data['iep']->first_name . ' ' . ($data['iep']->middle_name ?? '') . ' ' . $data['iep']->last_name . ' ' . ($data['iep']->suffix ?? '')); ?>" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">LRN</label>
+                        <input type="text" class="form-control bg-light" value="<?php echo htmlspecialchars($data['iep']->lrn ?? 'N/A'); ?>" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Grade Level</label>
+                        <input type="text" class="form-control bg-light" value="<?php echo htmlspecialchars($data['iep']->grade_level ?? 'N/A'); ?>" readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Meeting Details -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-calendar-check me-2"></i>
+                    Meeting Details
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Important:</strong> Minimum 3 days notice required. Meeting date must be at least 3 days from today.
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Meeting Date <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" name="meeting_date" id="meeting_date" required 
+                               min="<?php echo date('Y-m-d', strtotime('+3 days')); ?>">
+                        <small class="text-muted">Minimum 3 days from today</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Meeting Time <span class="text-danger">*</span></label>
+                        <input type="time" class="form-control" name="meeting_time" required>
+                        <small class="text-muted">Select meeting time</small>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-2">
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Location <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="location" required placeholder="e.g. Conference Room, SPED Office">
+                        <small class="text-muted">Where will the meeting take place?</small>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-2">
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Agenda</label>
+                        <textarea class="form-control" name="agenda" rows="4" placeholder="Meeting agenda (optional)&#10;&#10;Example:&#10;1. Review IEP goals&#10;2. Discuss services and accommodations&#10;3. Parent/Guardian input&#10;4. Next steps"></textarea>
+                        <small class="text-muted">Optional: Outline what will be discussed</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Meeting Participants -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-people me-2"></i>
+                    Meeting Participants
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Select participants who will attend the IEP meeting. Required participants are pre-selected.
+                </p>
+
+                <!-- Required Participants -->
+                <h6 class="fw-bold mb-3">Required Participants</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-danger">
+                            <div class="card-body">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="participants[]" value="parent" checked disabled>
+                                    <input type="hidden" name="participants[]" value="parent">
+                                    <label class="form-check-label fw-bold">
+                                        <i class="bi bi-person-check text-danger me-2"></i>
+                                        Parent/Guardian
+                                    </label>
+                                </div>
+                                <small class="text-muted d-block mt-2">
+                                    <?php echo htmlspecialchars($data['iep']->parent_name ?? 'Parent/Guardian'); ?>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-danger">
+                            <div class="card-body">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="participants[]" value="sped_teacher" checked disabled>
+                                    <input type="hidden" name="participants[]" value="sped_teacher">
+                                    <label class="form-check-label fw-bold">
+                                        <i class="bi bi-person-badge text-danger me-2"></i>
+                                        SPED Teacher
+                                    </label>
+                                </div>
+                                <small class="text-muted d-block mt-2">
+                                    <?php echo htmlspecialchars($data['user_name']); ?>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-danger">
+                            <div class="card-body">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="participants[]" value="guidance" checked disabled>
+                                    <input type="hidden" name="participants[]" value="guidance">
+                                    <label class="form-check-label fw-bold">
+                                        <i class="bi bi-person-heart text-danger me-2"></i>
+                                        Guidance Counselor
+                                    </label>
+                                </div>
+                                <small class="text-muted d-block mt-2">Required for behavioral insights</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-danger">
+                            <div class="card-body">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="participants[]" value="principal" checked disabled>
+                                    <input type="hidden" name="participants[]" value="principal">
+                                    <label class="form-check-label fw-bold">
+                                        <i class="bi bi-person-badge-fill text-danger me-2"></i>
+                                        Principal/Administrator
+                                    </label>
+                                </div>
+                                <small class="text-muted d-block mt-2">Required for approval</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Optional Participants -->
+                <h6 class="fw-bold mb-3">Optional Participants</h6>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card border-secondary">
+                            <div class="card-body">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="participants[]" value="gen_ed_teacher" id="gen_ed_teacher">
+                                    <label class="form-check-label" for="gen_ed_teacher">
+                                        <i class="bi bi-person text-secondary me-2"></i>
+                                        General Education Teacher
+                                    </label>
+                                </div>
+                                <small class="text-muted d-block mt-2">Optional: For classroom integration insights</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-secondary">
+                            <div class="card-body">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="participants[]" value="specialist" id="specialist">
+                                    <label class="form-check-label" for="specialist">
+                                        <i class="bi bi-person-plus text-secondary me-2"></i>
+                                        Other Specialist
+                                    </label>
+                                </div>
+                                <small class="text-muted d-block mt-2">Optional: Speech therapist, OT, etc.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="bi bi-bell me-2"></i>
+                    <strong>Note:</strong> All selected participants will receive email invitations and must confirm their attendance.
+                </div>
+            </div>
+        </div>
+
+        <!-- Parent/Guardian Information -->
+        <?php if (isset($data['iep']->parent_name)): ?>
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-people me-2"></i>
+                    Parent/Guardian Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Parent/Guardian Name</label>
+                        <input type="text" class="form-control bg-light" value="<?php echo htmlspecialchars($data['iep']->parent_name ?? 'N/A'); ?>" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Email</label>
+                        <input type="text" class="form-control bg-light" value="<?php echo htmlspecialchars($data['iep']->parent_email ?? 'N/A'); ?>" readonly>
+                    </div>
+                </div>
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Note:</strong> A notification will be sent to the parent/guardian once the meeting is scheduled.
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- Action Buttons -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="<?php echo URLROOT; ?>/iep/list" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-calendar-check me-1"></i> Schedule Meeting
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+</main>
+
+<script>
+// Set minimum date to 3 days from today
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.querySelector('input[name="meeting_date"]');
+    const today = new Date();
+    today.setDate(today.getDate() + 3); // Add 3 days
+    const minDate = today.toISOString().split('T')[0];
+    dateInput.setAttribute('min', minDate);
+    
+    // Validate date on change
+    dateInput.addEventListener('change', function() {
+        const selectedDate = new Date(this.value);
+        const minDateObj = new Date(minDate);
+        
+        if (selectedDate < minDateObj) {
+            alert('Meeting date must be at least 3 days from today');
+            this.value = '';
+        }
+    });
+});
+</script>
+
+<?php require_once '../app/views/layouts/footer.php'; ?>

@@ -233,7 +233,7 @@ public function getUserCountByRole()
  */
 public function getRecentUsers($limit = 5)
 {
-    $sql = "SELECT id, first_name, middle_name, last_name, suffix, fullname, email, role, is_verified, created_at 
+    $sql = "SELECT id, fullname, email, role, is_verified, created_at 
             FROM users 
             ORDER BY created_at DESC 
             LIMIT :limit";
@@ -272,5 +272,21 @@ public function updateProfile($userId, $data)
         ':address' => $data['address'] ?? null,
         ':id' => $userId
     ]);
+}
+
+/**
+ * Get users by role
+ */
+public function getUsersByRole($role)
+{
+    $sql = "SELECT id, first_name, middle_name, last_name, suffix, fullname, email, role, is_verified, created_at 
+            FROM users 
+            WHERE role = :role
+            ORDER BY id DESC";
+    
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':role' => $role]);
+    
+    return $stmt->fetchAll(PDO::FETCH_OBJ);
 }
 }

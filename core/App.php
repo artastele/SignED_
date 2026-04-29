@@ -31,7 +31,14 @@ class App
 
         $this->params = $url ? array_values($url) : [];
 
-        call_user_func_array([$this->controller, $this->method], $this->params);
+        // Check if method exists before calling
+        if (method_exists($this->controller, $this->method)) {
+            call_user_func_array([$this->controller, $this->method], $this->params);
+        } else {
+            // Method doesn't exist, redirect to default
+            header('Location: ' . URLROOT . '/auth/login');
+            exit;
+        }
     }
 
     public function getUrl()

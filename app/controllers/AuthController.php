@@ -20,6 +20,11 @@ class AuthController extends Controller
 
             if (!$user) {
                 $this->recordFailedAttempt($email);
+                
+                // Log failed login attempt to audit_logs
+                $auditLog = $this->model('AuditLog');
+                $auditLog->logLogin($email, $_SERVER['REMOTE_ADDR'] ?? 'unknown', false, null);
+                
                 header('Location: ' . URLROOT . '/auth/login?error=' . urlencode('User not found. Please check your email address.'));
                 exit;
             }
@@ -31,12 +36,21 @@ class AuthController extends Controller
 
             if (!password_verify($password, $user->password)) {
                 $this->recordFailedAttempt($email);
+                
+                // Log failed login attempt to audit_logs
+                $auditLog = $this->model('AuditLog');
+                $auditLog->logLogin($email, $_SERVER['REMOTE_ADDR'] ?? 'unknown', false, $user->id);
+                
                 header('Location: ' . URLROOT . '/auth/login?error=' . urlencode('Invalid password. Please try again.'));
                 exit;
             }
 
             // Clear login attempts on successful login
             $this->clearLoginAttempts($email);
+
+            // Log successful login to audit_logs
+            $auditLog = $this->model('AuditLog');
+            $auditLog->logLogin($email, $_SERVER['REMOTE_ADDR'] ?? 'unknown', true, $user->id);
 
             $_SESSION['user_id'] = $user->id;
             $_SESSION['fullname'] = $user->fullname;
@@ -55,9 +69,9 @@ class AuthController extends Controller
             } elseif ($user->role == 'sped_teacher') {
                 header('Location: ' . URLROOT . '/sped/dashboard');
             } elseif ($user->role == 'guidance') {
-                header('Location: ' . URLROOT . '/sped/dashboard');
+                header('Location: ' . URLROOT . '/guidance/dashboard');
             } elseif ($user->role == 'principal') {
-                header('Location: ' . URLROOT . '/sped/dashboard');
+                header('Location: ' . URLROOT . '/principal/dashboard');
             } elseif ($user->role == 'learner') {
                 header('Location: ' . URLROOT . '/learner/dashboard');
             } else {
@@ -91,9 +105,9 @@ class AuthController extends Controller
                 exit;
             }
 
-            // Enforce password policy (only 8 characters minimum required)
+            // Enforce password policy (8+ chars, uppercase, lowercase, number, special char)
             if (!$this->validatePasswordPolicy($password)) {
-                header('Location: ' . URLROOT . '/auth/register?error=' . urlencode('Password must be at least 8 characters long.'));
+                header('Location: ' . URLROOT . '/auth/register?error=' . urlencode('Password must be at least 8 characters and include uppercase, lowercase, number, and special character.'));
                 exit;
             }
 
@@ -202,7 +216,7 @@ class AuthController extends Controller
             }
 
             $role = trim($_POST['role']);
-            $allowedRoles = ['teacher', 'parent', 'sped_teacher', 'guidance', 'principal', 'learner'];
+            $allowedRoles = ['teacher', 'parent', 'sped_teacher', 'guidance', 'principal'];
 
             if (!in_array($role, $allowedRoles)) {
                 header('Location: ' . URLROOT . '/auth/chooseRole?error=' . urlencode('Invalid role selected. Please choose a valid role.'));
@@ -214,43 +228,17 @@ class AuthController extends Controller
             if ($userModel->updateRole($_SESSION['user_id'], $role)) {
                 $_SESSION['role'] = $role;
 
-                // If learner role is selected, create a learner record
-                if ($role == 'learner') {
-                    $learnerModel = $this->model('Learner');
-                    
-                    // Check if learner record already exists
-                    $existingLearner = $learnerModel->getByUserId($_SESSION['user_id']);
-                    
-                    if (!$existingLearner) {
-                        // Create a basic learner record
-                        // Note: This requires additional information to be collected later
-                        $user = $userModel->getUserById($_SESSION['user_id']);
-                        
-                        $learnerData = [
-                            'user_id' => $_SESSION['user_id'],
-                            'parent_id' => null, // To be filled later
-                            'first_name' => $user->first_name ?? 'Unknown',
-                            'middle_name' => $user->middle_name,
-                            'last_name' => $user->last_name ?? 'Unknown',
-                            'suffix' => $user->suffix,
-                            'date_of_birth' => null, // To be filled later
-                            'grade_level' => null, // To be filled later
-                            'status' => 'pending_info' // New status for incomplete profiles
-                        ];
-                        
-                        $learnerModel->createBasicLearner($learnerData);
-                    }
-                }
-
                 // Enhanced role-based redirection
                 if ($role == 'teacher') {
                     header('Location: ' . URLROOT . '/teacher/dashboard');
                 } elseif ($role == 'parent') {
                     header('Location: ' . URLROOT . '/parent/dashboard');
-                } elseif ($role == 'sped_teacher' || $role == 'guidance' || $role == 'principal') {
+                } elseif ($role == 'sped_teacher') {
                     header('Location: ' . URLROOT . '/sped/dashboard');
-                } elseif ($role == 'learner') {
-                    header('Location: ' . URLROOT . '/learner/dashboard');
+                } elseif ($role == 'guidance') {
+                    header('Location: ' . URLROOT . '/guidance/dashboard');
+                } elseif ($role == 'principal') {
+                    header('Location: ' . URLROOT . '/principal/dashboard');
                 } else {
                     header('Location: ' . URLROOT . '/user/dashboard');
                 }
@@ -299,7 +287,8 @@ class AuthController extends Controller
         require_once '../config/google.php';
 
         if (!isset($_GET['code'])) {
-            die('Authorization code not received from Google.');
+            $this->handleOAuthError('Authorization code not received from Google.');
+            return;
         }
 
         $code = $_GET['code'];
@@ -325,13 +314,15 @@ class AuthController extends Controller
         curl_close($ch);
 
         if ($httpCode !== 200) {
-            die('Failed to get access token from Google.');
+            $this->handleOAuthError('Failed to get access token from Google.');
+            return;
         }
 
         $tokenInfo = json_decode($response, true);
         
         if (!isset($tokenInfo['access_token'])) {
-            die('Access token not received from Google.');
+            $this->handleOAuthError('Access token not received from Google.');
+            return;
         }
 
         // Get user info from Google
@@ -344,13 +335,15 @@ class AuthController extends Controller
         curl_close($ch);
 
         if ($httpCode !== 200) {
-            die('Failed to get user info from Google.');
+            $this->handleOAuthError('Failed to get user info from Google.');
+            return;
         }
 
         $googleUser = json_decode($userResponse, true);
 
         if (!isset($googleUser['email'])) {
-            die('Email not received from Google.');
+            $this->handleOAuthError('Email not received from Google.');
+            return;
         }
 
         $userModel = $this->model('User');
@@ -370,7 +363,8 @@ class AuthController extends Controller
                 if ($userModel->createGoogleUser($googleUser)) {
                     $user = $userModel->findUserByEmail($googleUser['email']);
                 } else {
-                    die('Failed to create user account.');
+                    $this->handleOAuthError('Failed to create user account.');
+                    return;
                 }
             }
         }
@@ -393,9 +387,9 @@ class AuthController extends Controller
         } elseif ($user->role == 'sped_teacher') {
             header('Location: ' . URLROOT . '/sped/dashboard');
         } elseif ($user->role == 'guidance') {
-            header('Location: ' . URLROOT . '/sped/dashboard');
+            header('Location: ' . URLROOT . '/guidance/dashboard');
         } elseif ($user->role == 'principal') {
-            header('Location: ' . URLROOT . '/sped/dashboard');
+            header('Location: ' . URLROOT . '/principal/dashboard');
         } elseif ($user->role == 'learner') {
             header('Location: ' . URLROOT . '/learner/dashboard');
         } else {
@@ -405,14 +399,46 @@ class AuthController extends Controller
     }
 
     /**
+     * Handle OAuth errors gracefully
+     */
+    private function handleOAuthError($message)
+    {
+        // Log the error
+        error_log("OAuth Error: $message");
+        
+        // Redirect to login with error message
+        header('Location: ' . URLROOT . '/auth/login?error=' . urlencode('Google sign-in failed. Please try again or use email/password.'));
+        exit;
+    }
+
+    /**
      * Validate password policy
-     * Only requires minimum 8 characters
-     * Other requirements (uppercase, lowercase, number, special char) are optional for strength
+     * Requires: 8+ characters, uppercase, lowercase, number, special character
      */
     private function validatePasswordPolicy($password)
     {
-        // Only requirement: Minimum 8 characters
+        // Minimum 8 characters
         if (strlen($password) < 8) {
+            return false;
+        }
+
+        // Must contain at least one uppercase letter
+        if (!preg_match('/[A-Z]/', $password)) {
+            return false;
+        }
+
+        // Must contain at least one lowercase letter
+        if (!preg_match('/[a-z]/', $password)) {
+            return false;
+        }
+
+        // Must contain at least one number
+        if (!preg_match('/[0-9]/', $password)) {
+            return false;
+        }
+
+        // Must contain at least one special character
+        if (!preg_match('/[^A-Za-z0-9]/', $password)) {
             return false;
         }
 

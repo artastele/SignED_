@@ -41,60 +41,45 @@
     
     <!-- Statistics Cards -->
     <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card stat-card h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-label">Pending Verification</div>
-                            <div class="stat-number"><?php echo count($data['enrollments'] ?? []); ?></div>
-                        </div>
-                        <div class="stat-icon">
-                            <i class="bi bi-hourglass-split"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="card stat-card h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-label">Complete Applications</div>
-                            <div class="stat-number">
-                                <?php 
-                                $completeCount = 0;
-                                foreach (($data['enrollments'] ?? []) as $enrollment) {
-                                    if ($enrollment->document_count >= 4) $completeCount++;
-                                }
-                                echo $completeCount;
-                                ?>
+        <div class="col-md-6">
+            <a href="<?php echo URLROOT; ?>/enrollment/verify?status=pending_verification" class="text-decoration-none">
+                <div class="card stat-card h-100 <?php echo (!isset($_GET['status']) || $_GET['status'] == 'pending_verification') ? 'border-primary' : ''; ?>" style="cursor: pointer;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="stat-label">PENDING VERIFICATION</div>
+                                <div class="stat-number"><?php echo count($data['enrollments'] ?? []); ?></div>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-hourglass-split"></i>
                             </div>
                         </div>
-                        <div class="stat-icon">
-                            <i class="bi bi-check-circle"></i>
-                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
         
-        <div class="col-md-4">
-            <div class="card stat-card h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-label">Incomplete Applications</div>
-                            <div class="stat-number"><?php echo count($data['enrollments'] ?? []) - $completeCount; ?></div>
-                        </div>
-                        <div class="stat-icon">
-                            <i class="bi bi-x-circle"></i>
+        <div class="col-md-6">
+            <a href="<?php echo URLROOT; ?>/enrollment/verify?status=approved" class="text-decoration-none">
+                <div class="card stat-card h-100 <?php echo (isset($_GET['status']) && $_GET['status'] == 'approved') ? 'border-success' : ''; ?>" style="cursor: pointer;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="stat-label">APPROVED</div>
+                                <div class="stat-number">
+                                    <?php 
+                                    // Get approved count from controller
+                                    echo $data['approved_count'] ?? 0;
+                                    ?>
+                                </div>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
     
@@ -103,7 +88,14 @@
         <div class="card-header bg-white">
             <h5 class="mb-0">
                 <i class="bi bi-list-check me-2"></i>
-                Pending Enrollments
+                <?php 
+                $statusFilter = $_GET['status'] ?? 'pending_verification';
+                if ($statusFilter == 'approved') {
+                    echo 'Approved Enrollments';
+                } else {
+                    echo 'Pending Enrollments';
+                }
+                ?>
             </h5>
         </div>
         <div class="card-body p-0">
@@ -122,8 +114,13 @@
                                 <th>Parent</th>
                                 <th>Grade Level</th>
                                 <th>Date of Birth</th>
-                                <th>Documents</th>
-                                <th>Submitted</th>
+                                <?php if ($statusFilter == 'approved'): ?>
+                                    <th>LRN</th>
+                                    <th>Approved Date</th>
+                                <?php else: ?>
+                                    <th>Documents</th>
+                                    <th>Submitted</th>
+                                <?php endif; ?>
                                 <th class="text-end">Actions</th>
                             </tr>
                         </thead>
@@ -139,46 +136,69 @@
                                     </td>
                                     <td><?php echo htmlspecialchars($enrollment->learner_grade); ?></td>
                                     <td><?php echo date('M j, Y', strtotime($enrollment->learner_dob)); ?></td>
-                                    <td>
-                                        <?php if ($enrollment->document_count >= 4): ?>
-                                            <span class="badge bg-success">
-                                                <i class="bi bi-check-circle me-1"></i><?php echo $enrollment->document_count; ?>/4
-                                            </span>
-                                        <?php else: ?>
-                                            <span class="badge bg-warning text-dark">
-                                                <i class="bi bi-exclamation-circle me-1"></i><?php echo $enrollment->document_count; ?>/4
-                                            </span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <small><?php echo date('M j, Y', strtotime($enrollment->created_at)); ?></small>
-                                    </td>
+                                    
+                                    <?php if ($statusFilter == 'approved'): ?>
+                                        <td>
+                                            <?php 
+                                            // Get learner LRN
+                                            $learnerModel = new Learner();
+                                            $learner = $learnerModel->getByEnrollment($enrollment->id);
+                                            echo $learner ? htmlspecialchars($learner->lrn) : 'N/A';
+                                            ?>
+                                        </td>
+                                        <td>
+                                            <small><?php echo $enrollment->verified_at ? date('M j, Y g:i A', strtotime($enrollment->verified_at)) : 'N/A'; ?></small>
+                                        </td>
+                                    <?php else: ?>
+                                        <td>
+                                            <?php if ($enrollment->document_count >= 4): ?>
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle me-1"></i><?php echo $enrollment->document_count; ?>/4
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="bi bi-exclamation-circle me-1"></i><?php echo $enrollment->document_count; ?>/4
+                                                </span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <small><?php echo date('M j, Y', strtotime($enrollment->created_at)); ?></small>
+                                        </td>
+                                    <?php endif; ?>
+                                    
                                     <td class="text-end">
-                                        <div class="btn-group" role="group">
+                                        <?php if ($statusFilter == 'approved'): ?>
                                             <a href="<?php echo URLROOT; ?>/enrollment/viewEnrollment?id=<?php echo $enrollment->id; ?>" 
                                                class="btn btn-sm btn-primary">
-                                                <i class="bi bi-eye me-1"></i>Review
+                                                <i class="bi bi-eye me-1"></i>View Details
                                             </a>
-                                            
-                                            <?php if ($enrollment->document_count >= 4): ?>
-                                                <form method="POST" action="<?php echo URLROOT; ?>/enrollment/approve" style="display: inline;">
-                                                    <input type="hidden" name="enrollment_id" value="<?php echo $enrollment->id; ?>">
-                                                    <button type="submit" class="btn btn-sm btn-success" 
-                                                            onclick="return confirm('Are you sure you want to approve this enrollment?')">
-                                                        <i class="bi bi-check-circle me-1"></i>Approve
-                                                    </button>
-                                                </form>
+                                        <?php else: ?>
+                                            <div class="btn-group" role="group">
+                                                <a href="<?php echo URLROOT; ?>/enrollment/viewEnrollment?id=<?php echo $enrollment->id; ?>" 
+                                                   class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-eye me-1"></i>Review
+                                                </a>
                                                 
-                                                <button class="btn btn-sm btn-danger" 
-                                                        onclick="showRejectModal(<?php echo $enrollment->id; ?>, '<?php echo htmlspecialchars($enrollment->learner_first_name . ' ' . $enrollment->learner_last_name); ?>')">
-                                                    <i class="bi bi-x-circle me-1"></i>Reject
-                                                </button>
-                                            <?php else: ?>
-                                                <button class="btn btn-sm btn-secondary" disabled>
-                                                    <i class="bi bi-hourglass-split me-1"></i>Incomplete
-                                                </button>
-                                            <?php endif; ?>
-                                        </div>
+                                                <?php if ($enrollment->document_count >= 4): ?>
+                                                    <form method="POST" action="<?php echo URLROOT; ?>/enrollment/approve" style="display: inline;">
+                                                        <input type="hidden" name="enrollment_id" value="<?php echo $enrollment->id; ?>">
+                                                        <button type="submit" class="btn btn-sm btn-success" 
+                                                                onclick="return confirm('Are you sure you want to approve this enrollment?')">
+                                                            <i class="bi bi-check-circle me-1"></i>Approve
+                                                        </button>
+                                                    </form>
+                                                    
+                                                    <button class="btn btn-sm btn-danger" 
+                                                            onclick="showRejectModal(<?php echo $enrollment->id; ?>, '<?php echo htmlspecialchars($enrollment->learner_first_name . ' ' . $enrollment->learner_last_name); ?>')">
+                                                        <i class="bi bi-x-circle me-1"></i>Reject
+                                                    </button>
+                                                <?php else: ?>
+                                                    <button class="btn btn-sm btn-secondary" disabled>
+                                                        <i class="bi bi-hourglass-split me-1"></i>Incomplete
+                                                    </button>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

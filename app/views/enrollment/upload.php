@@ -1,595 +1,240 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Documents - SignED</title>
-    <link rel="stylesheet" href="<?php echo URLROOT; ?>/assets/css/style.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #f3f4f6;
-            color: #1f2937;
-        }
-
-        .dashboard-container {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .main-content {
-            flex: 1;
-            padding: 30px;
-            margin-left: 250px;
-        }
-
-        .page-header {
-            margin-bottom: 30px;
-        }
-
-        .page-header h1 {
-            font-size: 28px;
-            color: #111827;
-            margin-bottom: 5px;
-        }
-
-        .page-header p {
-            color: #6b7280;
-            font-size: 14px;
-        }
-
-        .enrollment-info-card {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .enrollment-info-card h3 {
-            font-size: 16px;
-            color: #111827;
-            margin-bottom: 15px;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-
-        .info-item {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .info-label {
-            font-size: 12px;
-            color: #6b7280;
-            margin-bottom: 4px;
-        }
-
-        .info-value {
-            font-size: 14px;
-            color: #111827;
-            font-weight: 500;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .status-badge.pending_documents {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .status-badge.pending_verification {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-
-        .status-badge.approved {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .status-badge.rejected {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .progress-card {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .progress-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .progress-header h3 {
-            font-size: 16px;
-            color: #111827;
-        }
-
-        .progress-count {
-            font-size: 14px;
-            color: #6b7280;
-            font-weight: 600;
-        }
-
-        .progress-bar {
-            height: 8px;
-            background: #e5e7eb;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 10px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: #10b981;
-            transition: width 0.3s ease;
-        }
-
-        .progress-text {
-            font-size: 12px;
-            color: #6b7280;
-        }
-
-        .requirements-box {
-            background: #fffbeb;
-            border-left: 3px solid #f59e0b;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-
-        .requirements-box h4 {
-            font-size: 14px;
-            color: #92400e;
-            margin-bottom: 10px;
-        }
-
-        .requirements-box ul {
-            margin-left: 20px;
-            font-size: 13px;
-            color: #78350f;
-        }
-
-        .requirements-box li {
-            margin: 5px 0;
-        }
-
-        .success-message {
-            background: #d1fae5;
-            border-left: 3px solid #10b981;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            color: #065f46;
-        }
-
-        .document-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .document-card {
-            background: white;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .document-card.uploaded {
-            border-color: #10b981;
-            background: #f0fdf4;
-        }
-
-        .document-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-        }
-
-        .document-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #111827;
-        }
-
-        .upload-badge {
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .upload-badge.uploaded {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .upload-badge.required {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .document-description {
-            font-size: 13px;
-            color: #6b7280;
-            margin-bottom: 15px;
-            line-height: 1.5;
-        }
-
-        .file-upload-area {
-            border: 2px dashed #d1d5db;
-            border-radius: 6px;
-            padding: 30px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: #f9fafb;
-        }
-
-        .file-upload-area:hover {
-            border-color: #3b82f6;
-            background: #eff6ff;
-        }
-
-        .file-upload-area.dragover {
-            border-color: #3b82f6;
-            background: #eff6ff;
-        }
-
-        .upload-icon {
-            font-size: 32px;
-            margin-bottom: 10px;
-        }
-
-        .upload-text {
-            font-size: 14px;
-            color: #374151;
-            margin-bottom: 5px;
-        }
-
-        .upload-hint {
-            font-size: 12px;
-            color: #9ca3af;
-        }
-
-        .uploaded-file-info {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-
-        .uploaded-file-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: #111827;
-            margin-bottom: 8px;
-            word-break: break-all;
-        }
-
-        .uploaded-file-meta {
-            font-size: 12px;
-            color: #6b7280;
-            margin-bottom: 3px;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #3b82f6;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            font-weight: 500;
-            font-size: 14px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn:hover {
-            background: #2563eb;
-            transform: translateY(-1px);
-        }
-
-        .btn-success {
-            background: #10b981;
-        }
-
-        .btn-success:hover {
-            background: #059669;
-        }
-
-        .btn-secondary {
-            background: #6b7280;
-        }
-
-        .btn-secondary:hover {
-            background: #4b5563;
-        }
-
-        .btn-danger {
-            background: #ef4444;
-        }
-
-        .btn-danger:hover {
-            background: #dc2626;
-        }
-
-        .btn-small {
-            padding: 8px 16px;
-            font-size: 13px;
-        }
-
-        .btn-full {
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .page-actions {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #e5e7eb;
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                margin-left: 0;
-                padding: 20px;
-            }
-
-            .document-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .page-actions {
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
-            }
-        }
-    </style>
-</head>
-<body>
-
-<?php include '../app/views/partials/simple_popup.php'; ?>
-<?php include '../app/views/partials/sidebar.php'; ?>
-
-<div class="dashboard-container">
-    <div class="main-content">
-        <div class="page-header">
-            <h1>📤 Upload Enrollment Documents</h1>
-            <p>Upload all required documents to complete your enrollment</p>
+<?php require_once '../app/views/layouts/header.php'; ?>
+
+<!-- Sidebar -->
+<?php require_once '../app/views/layouts/sidebar.php'; ?>
+
+<!-- Main Content -->
+<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+    
+    <!-- Page Header -->
+    <div class="mb-4">
+        <h4><i class="bi bi-upload me-2"></i>Upload Enrollment Documents</h4>
+        <p class="text-muted small mb-0">Upload all required documents to complete your enrollment</p>
+    </div>
+    
+    <!-- Success/Error Messages -->
+    <?php if (isset($_GET['success'])): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i><?php echo htmlspecialchars($_GET['success']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-
-        <!-- Enrollment Information Card -->
-        <div class="enrollment-info-card">
-            <h3>📋 Enrollment Information</h3>
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="info-label">Student Name</span>
-                    <span class="info-value"><?php echo htmlspecialchars($data['enrollment']->learner_first_name . ' ' . $data['enrollment']->learner_last_name); ?></span>
+    <?php endif; ?>
+    
+    <?php if (isset($data['success'])): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i><?php echo htmlspecialchars($data['success']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+    
+    <?php if (isset($data['error'])): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i><?php echo htmlspecialchars($data['error']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+    
+    <!-- Upload Progress -->
+    <?php
+    $psaUploaded = isset($data['uploaded_types']['psa']) ? 1 : 0;
+    $totalRequired = 1;
+    ?>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h6 class="mb-2"><i class="bi bi-graph-up me-2"></i>Upload Progress</h6>
+            <p class="mb-0"><strong><?php echo $psaUploaded; ?> / <?php echo $totalRequired; ?> required document</strong></p>
+            <p class="text-muted small mb-0">PSA Birth Certificate is required to proceed</p>
+        </div>
+    </div>
+    
+    <!-- Documents Grid -->
+    <div class="row g-3">
+        
+        <!-- BEEF Form - Already Submitted -->
+        <div class="col-md-6">
+            <div class="card border-success h-100">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center py-2">
+                    <span class="small"><i class="bi bi-file-earmark-check me-2"></i>Basic Education Enrollment Form (BEEF)</span>
+                    <span class="badge bg-light text-success">✓ Submitted</span>
                 </div>
-                <div class="info-item">
-                    <span class="info-label">Grade Level</span>
-                    <span class="info-value">Grade <?php echo htmlspecialchars($data['enrollment']->learner_grade); ?></span>
+                <div class="card-body">
+                    <p class="small text-muted mb-2">Basic Education Enrollment Form from DepEd</p>
+                    <div class="bg-light p-2 rounded small">
+                        <div class="fw-semibold">BEEF Form - <?php echo htmlspecialchars($data['enrollment']->learner_first_name . ' ' . $data['enrollment']->learner_last_name); ?></div>
+                        <div class="text-muted">✅ Submitted during enrollment process</div>
+                        <div class="text-muted">📅 <?php echo date('M d, Y g:i A', strtotime($data['enrollment']->created_at)); ?></div>
+                    </div>
                 </div>
-                <div class="info-item">
-                    <span class="info-label">Date of Birth</span>
-                    <span class="info-value"><?php echo date('M d, Y', strtotime($data['enrollment']->learner_dob)); ?></span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Status</span>
-                    <span class="status-badge <?php echo $data['enrollment']->status; ?>">
-                        <?php echo ucwords(str_replace('_', ' ', $data['enrollment']->status)); ?>
+            </div>
+        </div>
+        
+        <!-- PSA Birth Certificate - Required -->
+        <div class="col-md-6">
+            <div class="card <?php echo isset($data['uploaded_types']['psa']) ? 'border-success' : 'border-danger'; ?> h-100">
+                <div class="card-header <?php echo isset($data['uploaded_types']['psa']) ? 'bg-success' : 'bg-danger'; ?> text-white d-flex justify-content-between align-items-center py-2">
+                    <span class="small"><i class="bi bi-file-earmark-text me-2"></i>PSA Birth Certificate <span class="text-warning">*</span></span>
+                    <span class="badge bg-light <?php echo isset($data['uploaded_types']['psa']) ? 'text-success' : 'text-danger'; ?>">
+                        <?php echo isset($data['uploaded_types']['psa']) ? '✓ Uploaded' : '⚠ Required'; ?>
                     </span>
                 </div>
-            </div>
-        </div>
-
-        <!-- Progress Card -->
-        <?php
-        $uploadedCount = count($data['documents']);
-        $totalRequired = 4;
-        $progressPercent = ($uploadedCount / $totalRequired) * 100;
-        ?>
-        <div class="progress-card">
-            <div class="progress-header">
-                <h3>📊 Upload Progress</h3>
-                <span class="progress-count"><?php echo $uploadedCount; ?> / <?php echo $totalRequired; ?> documents</span>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: <?php echo $progressPercent; ?>%"></div>
-            </div>
-            <p class="progress-text">
-                <?php if ($uploadedCount == $totalRequired): ?>
-                    ✅ All documents uploaded! Your enrollment is now pending verification.
-                <?php else: ?>
-                    <?php echo (4 - $uploadedCount); ?> document(s) remaining
-                <?php endif; ?>
-            </p>
-        </div>
-
-        <!-- Requirements Box -->
-        <div class="requirements-box">
-            <h4>📌 File Requirements:</h4>
-            <ul>
-                <li>Accepted file types: PDF, JPG, PNG</li>
-                <li>Maximum file size: 5MB per document</li>
-                <li>All four document types are required</li>
-                <li>Files are encrypted and stored securely</li>
-            </ul>
-        </div>
-
-        <!-- Success Message -->
-        <?php if ($data['enrollment']->status === 'pending_verification'): ?>
-            <div class="success-message">
-                <strong>✅ All documents uploaded successfully!</strong><br>
-                Your enrollment is now pending verification by SPED staff. You will be notified once the verification is complete.
-            </div>
-        <?php endif; ?>
-
-        <!-- Document Grid -->
-        <div class="document-grid">
-            <?php foreach ($data['required_types'] as $type => $title): ?>
-                <div class="document-card <?php echo isset($data['uploaded_types'][$type]) ? 'uploaded' : ''; ?>">
-                    <div class="document-header">
-                        <div class="document-title"><?php echo htmlspecialchars($title); ?></div>
-                        <div class="upload-badge <?php echo isset($data['uploaded_types'][$type]) ? 'uploaded' : 'required'; ?>">
-                            <?php echo isset($data['uploaded_types'][$type]) ? '✓ Uploaded' : 'Required'; ?>
+                <div class="card-body">
+                    <p class="small text-muted mb-2">Official birth certificate from Philippine Statistics Authority (REQUIRED)</p>
+                    
+                    <?php if (isset($data['uploaded_types']['psa'])): ?>
+                        <div class="bg-light p-2 rounded small mb-2">
+                            <div class="fw-semibold"><?php echo htmlspecialchars($data['uploaded_types']['psa']->original_filename); ?></div>
+                            <div class="text-muted">📅 Uploaded: <?php echo date('M d, Y g:i A', strtotime($data['uploaded_types']['psa']->uploaded_at)); ?></div>
+                            <div class="text-muted">📦 Size: <?php echo number_format($data['uploaded_types']['psa']->file_size / 1024, 1); ?> KB</div>
                         </div>
-                    </div>
-
-                    <div class="document-description">
-                        <?php
-                        switch($type) {
-                            case 'psa':
-                                echo '📄 Official birth certificate from Philippine Statistics Authority';
-                                break;
-                            case 'pwd_id':
-                                echo '🆔 Person with Disability identification card (optional)';
-                                break;
-                            case 'medical_record':
-                                echo '🏥 Medical documentation supporting disability status (optional)';
-                                break;
-                            case 'beef':
-                                echo '📋 Basic Education Enrollment Form from DepEd';
-                                break;
-                        }
-                        ?>
-                    </div>
-
-                    <?php if (isset($data['uploaded_types'][$type])): ?>
-                        <!-- Uploaded File Info -->
-                        <div class="uploaded-file-info">
-                            <div class="uploaded-file-name">
-                                <?php echo htmlspecialchars($data['uploaded_types'][$type]->original_filename); ?>
-                            </div>
-                            <div class="uploaded-file-meta">
-                                📅 Uploaded: <?php echo date('M d, Y g:i A', strtotime($data['uploaded_types'][$type]->uploaded_at)); ?>
-                            </div>
-                            <div class="uploaded-file-meta">
-                                📦 Size: <?php echo number_format($data['uploaded_types'][$type]->file_size / 1024, 1); ?> KB
-                            </div>
-                        </div>
-                        <div class="action-buttons">
-                            <button class="btn btn-success btn-small" onclick="replaceDocument('<?php echo $type; ?>', '<?php echo $data['enrollment']->id; ?>')">
-                                🔄 Replace
-                            </button>
-                        </div>
+                        <button class="btn btn-sm btn-success" onclick="replaceDocument('psa', '<?php echo $data['enrollment']->id; ?>')">
+                            <i class="bi bi-arrow-repeat me-1"></i>Replace
+                        </button>
                     <?php else: ?>
-                        <!-- Upload Form -->
                         <form method="POST" action="<?php echo URLROOT; ?>/enrollment/upload?id=<?php echo $data['enrollment']->id; ?>" 
-                              enctype="multipart/form-data" id="form-<?php echo $type; ?>">
-                            <input type="hidden" name="document_type" value="<?php echo $type; ?>">
-                            
-                            <div class="file-upload-area" id="upload-area-<?php echo $type; ?>" 
-                                 onclick="document.getElementById('file-<?php echo $type; ?>').click()">
-                                <div class="upload-icon">📁</div>
-                                <div class="upload-text">Click to select file</div>
-                                <div class="upload-hint">or drag and drop here</div>
+                              enctype="multipart/form-data" id="form-psa">
+                            <input type="hidden" name="document_type" value="psa">
+                            <div class="border border-2 border-dashed rounded text-center p-3 mb-2" 
+                                 id="upload-area-psa" 
+                                 onclick="document.getElementById('file-psa').click()"
+                                 style="cursor: pointer;">
+                                <i class="bi bi-cloud-upload fs-3 text-muted d-block"></i>
+                                <div class="small text-muted">Click to select file or drag and drop here</div>
                             </div>
-                            <input type="file" id="file-<?php echo $type; ?>" name="document" 
-                                   accept=".pdf,.jpg,.jpeg,.png" style="display: none;" 
-                                   onchange="handleFileSelect(this, '<?php echo $type; ?>')">
-                            
-                            <button type="submit" class="btn btn-full" id="submit-<?php echo $type; ?>" style="display: none;">
-                                Upload Document
+                            <input type="file" id="file-psa" name="document" accept=".pdf,.jpg,.jpeg,.png" style="display: none;" onchange="handleFileSelect(this, 'psa')">
+                            <button type="submit" class="btn btn-primary btn-sm w-100" id="submit-psa" style="display: none;">
+                                <i class="bi bi-upload me-1"></i>Upload
                             </button>
                         </form>
                     <?php endif; ?>
                 </div>
-            <?php endforeach; ?>
+            </div>
         </div>
-
-        <!-- Page Actions -->
-        <div class="page-actions">
-            <a href="<?php echo URLROOT; ?>/parent/dashboard" class="btn btn-secondary">
-                ← Back to Dashboard
-            </a>
-            <a href="<?php echo URLROOT; ?>/enrollment/status" class="btn btn-secondary">
-                View All Enrollments
-            </a>
+        
+        <!-- PWD ID Card - Optional -->
+        <div class="col-md-6">
+            <div class="card <?php echo isset($data['uploaded_types']['pwd_id']) ? 'border-success' : 'border-secondary'; ?> h-100">
+                <div class="card-header <?php echo isset($data['uploaded_types']['pwd_id']) ? 'bg-success' : 'bg-secondary'; ?> text-white d-flex justify-content-between align-items-center py-2">
+                    <span class="small"><i class="bi bi-file-earmark-text me-2"></i>PWD ID Card</span>
+                    <span class="badge bg-light <?php echo isset($data['uploaded_types']['pwd_id']) ? 'text-success' : 'text-secondary'; ?>">
+                        <?php echo isset($data['uploaded_types']['pwd_id']) ? '✓ Uploaded' : 'Optional'; ?>
+                    </span>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-2">Person with Disability identification card (upload if available)</p>
+                    
+                    <?php if (isset($data['uploaded_types']['pwd_id'])): ?>
+                        <div class="bg-light p-2 rounded small mb-2">
+                            <div class="fw-semibold"><?php echo htmlspecialchars($data['uploaded_types']['pwd_id']->original_filename); ?></div>
+                            <div class="text-muted">📅 Uploaded: <?php echo date('M d, Y g:i A', strtotime($data['uploaded_types']['pwd_id']->uploaded_at)); ?></div>
+                            <div class="text-muted">📦 Size: <?php echo number_format($data['uploaded_types']['pwd_id']->file_size / 1024, 1); ?> KB</div>
+                        </div>
+                        <button class="btn btn-sm btn-success" onclick="replaceDocument('pwd_id', '<?php echo $data['enrollment']->id; ?>')">
+                            <i class="bi bi-arrow-repeat me-1"></i>Replace
+                        </button>
+                    <?php else: ?>
+                        <form method="POST" action="<?php echo URLROOT; ?>/enrollment/upload?id=<?php echo $data['enrollment']->id; ?>" 
+                              enctype="multipart/form-data" id="form-pwd_id">
+                            <input type="hidden" name="document_type" value="pwd_id">
+                            <div class="border border-2 border-dashed rounded text-center p-3 mb-2" 
+                                 id="upload-area-pwd_id" 
+                                 onclick="document.getElementById('file-pwd_id').click()"
+                                 style="cursor: pointer;">
+                                <i class="bi bi-cloud-upload fs-3 text-muted d-block"></i>
+                                <div class="small text-muted">Click to select file or drag and drop here</div>
+                            </div>
+                            <input type="file" id="file-pwd_id" name="document" accept=".pdf,.jpg,.jpeg,.png" style="display: none;" onchange="handleFileSelect(this, 'pwd_id')">
+                            <button type="submit" class="btn btn-primary btn-sm w-100" id="submit-pwd_id" style="display: none;">
+                                <i class="bi bi-upload me-1"></i>Upload
+                            </button>
+                        </form>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
+        
+        <!-- Medical Records - Optional -->
+        <div class="col-md-6">
+            <div class="card <?php echo isset($data['uploaded_types']['medical_record']) ? 'border-success' : 'border-secondary'; ?> h-100">
+                <div class="card-header <?php echo isset($data['uploaded_types']['medical_record']) ? 'bg-success' : 'bg-secondary'; ?> text-white d-flex justify-content-between align-items-center py-2">
+                    <span class="small"><i class="bi bi-file-earmark-text me-2"></i>Medical Records</span>
+                    <span class="badge bg-light <?php echo isset($data['uploaded_types']['medical_record']) ? 'text-success' : 'text-secondary'; ?>">
+                        <?php echo isset($data['uploaded_types']['medical_record']) ? '✓ Uploaded' : 'Optional'; ?>
+                    </span>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-2">Medical documentation supporting disability status (upload if available)</p>
+                    
+                    <?php if (isset($data['uploaded_types']['medical_record'])): ?>
+                        <div class="bg-light p-2 rounded small mb-2">
+                            <div class="fw-semibold"><?php echo htmlspecialchars($data['uploaded_types']['medical_record']->original_filename); ?></div>
+                            <div class="text-muted">📅 Uploaded: <?php echo date('M d, Y g:i A', strtotime($data['uploaded_types']['medical_record']->uploaded_at)); ?></div>
+                            <div class="text-muted">📦 Size: <?php echo number_format($data['uploaded_types']['medical_record']->file_size / 1024, 1); ?> KB</div>
+                        </div>
+                        <button class="btn btn-sm btn-success" onclick="replaceDocument('medical_record', '<?php echo $data['enrollment']->id; ?>')">
+                            <i class="bi bi-arrow-repeat me-1"></i>Replace
+                        </button>
+                    <?php else: ?>
+                        <form method="POST" action="<?php echo URLROOT; ?>/enrollment/upload?id=<?php echo $data['enrollment']->id; ?>" 
+                              enctype="multipart/form-data" id="form-medical_record">
+                            <input type="hidden" name="document_type" value="medical_record">
+                            <div class="border border-2 border-dashed rounded text-center p-3 mb-2" 
+                                 id="upload-area-medical_record" 
+                                 onclick="document.getElementById('file-medical_record').click()"
+                                 style="cursor: pointer;">
+                                <i class="bi bi-cloud-upload fs-3 text-muted d-block"></i>
+                                <div class="small text-muted">Click to select file or drag and drop here</div>
+                            </div>
+                            <input type="file" id="file-medical_record" name="document" accept=".pdf,.jpg,.jpeg,.png" style="display: none;" onchange="handleFileSelect(this, 'medical_record')">
+                            <button type="submit" class="btn btn-primary btn-sm w-100" id="submit-medical_record" style="display: none;">
+                                <i class="bi bi-upload me-1"></i>Upload
+                            </button>
+                        </form>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        
     </div>
-</div>
+    
+    <!-- Back Button -->
+    <div class="mt-4">
+        <a href="<?php echo URLROOT; ?>/parent/dashboard" class="btn btn-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+        </a>
+    </div>
+    
+</main>
 
 <script>
 function handleFileSelect(input, documentType) {
     const file = input.files[0];
     if (!file) return;
     
-    // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
-        showPopup('File size exceeds 5MB limit. Please select a smaller file.', 'error');
+        alert('File size exceeds 5MB limit. Please select a smaller file.');
         input.value = '';
         return;
     }
     
-    // Validate file type
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
     if (!allowedTypes.includes(file.type)) {
-        showPopup('Invalid file type. Please select a PDF, JPG, or PNG file.', 'error');
+        alert('Invalid file type. Please select a PDF, JPG, or PNG file.');
         input.value = '';
         return;
     }
     
-    // Update upload area to show selected file
     const uploadArea = document.getElementById('upload-area-' + documentType);
     uploadArea.innerHTML = `
-        <div class="upload-icon">✓</div>
-        <div class="upload-text"><strong>${file.name}</strong></div>
-        <div class="upload-hint">Size: ${(file.size / 1024).toFixed(1)} KB</div>
+        <i class="bi bi-check-circle fs-3 text-success d-block"></i>
+        <div class="small fw-semibold">${file.name}</div>
+        <div class="small text-muted">Size: ${(file.size / 1024).toFixed(1)} KB</div>
     `;
     
-    // Show submit button
     document.getElementById('submit-' + documentType).style.display = 'block';
 }
 
 function replaceDocument(documentType, enrollmentId) {
     if (confirm('Are you sure you want to replace this document?')) {
-        // Trigger file input
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.accept = '.pdf,.jpg,.jpeg,.png';
@@ -597,13 +242,11 @@ function replaceDocument(documentType, enrollmentId) {
             const file = this.files[0];
             if (!file) return;
             
-            // Validate file
             if (file.size > 5 * 1024 * 1024) {
-                showPopup('File size exceeds 5MB limit.', 'error');
+                alert('File size exceeds 5MB limit.');
                 return;
             }
             
-            // Create and submit form
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = '<?php echo URLROOT; ?>/enrollment/upload?id=' + enrollmentId;
@@ -628,24 +271,24 @@ function replaceDocument(documentType, enrollmentId) {
     }
 }
 
-// Drag and drop functionality
-document.querySelectorAll('.file-upload-area').forEach(area => {
+// Drag and drop
+document.querySelectorAll('[id^="upload-area-"]').forEach(area => {
     area.addEventListener('dragover', function(e) {
         e.preventDefault();
-        e.stopPropagation();
-        this.classList.add('dragover');
+        this.style.borderColor = '#0d6efd';
+        this.style.backgroundColor = '#e7f1ff';
     });
     
     area.addEventListener('dragleave', function(e) {
         e.preventDefault();
-        e.stopPropagation();
-        this.classList.remove('dragover');
+        this.style.borderColor = '';
+        this.style.backgroundColor = '';
     });
     
     area.addEventListener('drop', function(e) {
         e.preventDefault();
-        e.stopPropagation();
-        this.classList.remove('dragover');
+        this.style.borderColor = '';
+        this.style.backgroundColor = '';
         
         const files = e.dataTransfer.files;
         if (files.length > 0) {
@@ -658,5 +301,4 @@ document.querySelectorAll('.file-upload-area').forEach(area => {
 });
 </script>
 
-</body>
-</html>
+<?php require_once '../app/views/layouts/footer.php'; ?>

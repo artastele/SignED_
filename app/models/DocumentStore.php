@@ -518,6 +518,12 @@ class DocumentStore extends Model
     private function addImageWatermark($content, $watermarkText, $mimeType)
     {
         try {
+            // Check if GD extension is available
+            if (!extension_loaded('gd')) {
+                error_log("DocumentStore::addImageWatermark() Warning: GD extension not available. Returning original content.");
+                return $content;
+            }
+            
             $image = imagecreatefromstring($content);
             if ($image === false) {
                 return $content;

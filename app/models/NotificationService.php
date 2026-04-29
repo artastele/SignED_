@@ -296,7 +296,7 @@ class NotificationService extends Model
             'learner_name' => $learnerName,
             'action_type' => 'assessment_completed',
             'assessment_date' => $assessmentDate,
-            'system_link' => $this->buildSystemLink("/assessment/view/{$assessmentId}")
+            'system_link' => $this->buildSystemLink("/assessment/viewAssessment/{$assessmentId}")
         ];
         
         return $this->sendNotificationWithRetry(
@@ -577,7 +577,7 @@ class NotificationService extends Model
                 <li>You will receive meeting notification with details</li>
                 <li>The assessment will inform the IEP development process</li>
             </ul>
-            <p>You can view the assessment summary: <a href='" . $this->buildSystemLink("/assessment/view/{$assessmentId}") . "'>View Assessment</a></p>
+            <p>You can view the assessment summary: <a href='" . $this->buildSystemLink("/assessment/viewAssessment/{$assessmentId}") . "'>View Assessment</a></p>
             <p>Thank you for your patience during the assessment process.</p>
             <p>Best regards,<br>SignED SPED Team</p>
         ";
@@ -848,5 +848,23 @@ class NotificationService extends Model
             error_log("NotificationService::createNotification() Error: " . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Create notification (alias for createNotification)
+     * Accepts array parameter for easier use
+     * 
+     * @param array $data Notification data (user_id, title, message, type, link, priority)
+     * @return bool Success status
+     */
+    public function create($data)
+    {
+        return $this->createNotification(
+            $data['user_id'],
+            $data['title'],
+            $data['message'],
+            $data['type'] ?? 'info',
+            $data['link'] ?? null
+        );
     }
 }

@@ -1,571 +1,480 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create IEP - SignED SPED</title>
-    <link rel="stylesheet" href="/assets/css/style.css">
-    <style>
-        .iep-container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .iep-header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #1E40AF;
-        }
-        
-        .learner-info {
-            background: #F3F4F6;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-        }
-        
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-        
-        .info-item {
-            display: flex;
-        }
-        
-        .info-label {
-            font-weight: bold;
-            color: #1E40AF;
-            width: 120px;
-            flex-shrink: 0;
-        }
-        
-        .info-value {
-            flex: 1;
-        }
-        
-        .assessment-summary {
-            background: #EFF6FF;
-            border: 1px solid #BFDBFE;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 30px;
-        }
-        
-        .assessment-summary h4 {
-            margin: 0 0 10px 0;
-            color: #1E40AF;
-        }
-        
-        .assessment-summary p {
-            margin: 5px 0;
-            font-size: 14px;
-            color: #374151;
-        }
-        
-        .form-section {
-            margin-bottom: 40px;
-            padding: 25px;
-            border: 1px solid #E5E7EB;
-            border-radius: 8px;
-        }
-        
-        .form-section h3 {
-            margin: 0 0 20px 0;
-            color: #1E40AF;
-            border-bottom: 1px solid #E5E7EB;
-            padding-bottom: 10px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #374151;
-        }
-        
-        .form-group textarea {
-            width: 100%;
-            min-height: 120px;
-            padding: 12px;
-            border: 1px solid #D1D5DB;
-            border-radius: 4px;
-            font-size: 14px;
-            font-family: inherit;
-            resize: vertical;
-        }
-        
-        .form-group input[type="date"] {
-            width: 200px;
-            padding: 10px;
-            border: 1px solid #D1D5DB;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        
-        .date-group {
-            display: flex;
-            gap: 30px;
-            align-items: end;
-        }
-        
-        .date-group .form-group {
-            margin-bottom: 0;
-        }
-        
-        .help-text {
-            font-size: 12px;
-            color: #6B7280;
-            margin-top: 5px;
-            font-style: italic;
-        }
-        
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .btn-primary {
-            background: #1E40AF;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #1D4ED8;
-        }
-        
-        .btn-secondary {
-            background: #6B7280;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background: #4B5563;
-        }
-        
-        .btn-draft {
-            background: #F59E0B;
-            color: white;
-        }
-        
-        .btn-draft:hover {
-            background: #D97706;
-        }
-        
-        .error {
-            background: #FEE2E2;
-            color: #B91C1C;
-            padding: 12px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        
-        .required {
-            color: #B91C1C;
-        }
-        
-        .form-actions {
-            text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #E5E7EB;
-        }
-        
-        .prepopulated-notice {
-            background: #D1FAE5;
-            border: 1px solid #A7F3D0;
-            color: #065F46;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
-        
-        .character-count {
-            font-size: 11px;
-            color: #6B7280;
-            text-align: right;
-            margin-top: 5px;
-        }
-        
-        .progress-indicator {
-            background: #F3F4F6;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-        }
-        
-        .progress-steps {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .step {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-        }
-        
-        .step-number {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 12px;
-        }
-        
-        .step.completed .step-number {
-            background: #10B981;
-            color: white;
-        }
-        
-        .step.current .step-number {
-            background: #1E40AF;
-            color: white;
-        }
-        
-        .step.pending .step-number {
-            background: #E5E7EB;
-            color: #6B7280;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Create IEP Document</h1>
-            <nav>
-                <a href="/dashboard">Dashboard</a>
-                <a href="/iep/list">IEP List</a>
-                <a href="/logout">Logout</a>
-            </nav>
-        </div>
+<?php require_once '../app/views/layouts/header.php'; ?>
 
-        <div class="iep-container">
-            <?php if (isset($error)): ?>
-                <div class="error">
-                    <strong>Error:</strong> <?= htmlspecialchars($error) ?>
-                </div>
-            <?php endif; ?>
+<!-- Sidebar -->
+<?php require_once '../app/views/partials/sidebar.php'; ?>
 
-            <div class="iep-header">
-                <h2>Individualized Education Plan (IEP)</h2>
-                <p>Learner: <strong><?= htmlspecialchars($learner->first_name . ' ' . $learner->last_name) ?></strong></p>
-            </div>
-
-            <div class="progress-indicator">
-                <div class="progress-steps">
-                    <div class="step completed">
-                        <div class="step-number">✓</div>
-                        <span>Assessment Complete</span>
-                    </div>
-                    <div class="step completed">
-                        <div class="step-number">✓</div>
-                        <span>Meeting Held</span>
-                    </div>
-                    <div class="step current">
-                        <div class="step-number">3</div>
-                        <span>IEP Creation</span>
-                    </div>
-                    <div class="step pending">
-                        <div class="step-number">4</div>
-                        <span>Principal Approval</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="learner-info">
-                <h3 style="margin-top: 0; color: #1E40AF;">Learner Information</h3>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label">Full Name:</div>
-                        <div class="info-value"><?= htmlspecialchars($learner->first_name . ' ' . $learner->last_name) ?></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Date of Birth:</div>
-                        <div class="info-value"><?= date('F j, Y', strtotime($learner->date_of_birth)) ?></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Grade Level:</div>
-                        <div class="info-value"><?= htmlspecialchars($learner->grade_level) ?></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Parent/Guardian:</div>
-                        <div class="info-value"><?= htmlspecialchars($learner->parent_name) ?></div>
-                    </div>
-                </div>
-            </div>
-
-            <?php if ($assessment): ?>
-                <div class="assessment-summary">
-                    <h4>Assessment Summary</h4>
-                    <p><strong>Assessment Date:</strong> <?= date('F j, Y', strtotime($assessment->assessment_date)) ?></p>
-                    <p><strong>Assessed by:</strong> <?= htmlspecialchars($assessment->assessor_name ?? 'N/A') ?></p>
-                    <p style="margin-top: 10px; font-style: italic;">
-                        The fields below have been pre-populated with assessment data. Please review and modify as needed based on the IEP meeting discussions.
-                    </p>
-                </div>
-            <?php endif; ?>
-
-            <form method="POST" id="iepForm">
-                <div class="form-section">
-                    <h3>Present Level of Academic Achievement and Functional Performance</h3>
-                    <?php if (isset($prepopulated['present_level_performance'])): ?>
-                        <div class="prepopulated-notice">
-                            ✓ This section has been pre-populated with assessment data. Please review and modify as needed.
-                        </div>
-                    <?php endif; ?>
-                    
-                    <div class="form-group">
-                        <label for="present_level_performance">
-                            Describe the learner's current academic achievement, functional performance, and how the disability affects involvement in the general education curriculum <span class="required">*</span>
-                        </label>
-                        <textarea name="present_level_performance" 
-                                  id="present_level_performance" 
-                                  required
-                                  placeholder="Include strengths, needs, and current performance levels across all relevant domains..."><?= htmlspecialchars($form_data['present_level_performance'] ?? $prepopulated['present_level_performance'] ?? '') ?></textarea>
-                        <div class="character-count" id="present_level_count">0 characters</div>
-                        <div class="help-text">
-                            Include cognitive abilities, communication skills, social-emotional development, adaptive behavior, and academic performance.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h3>Annual Goals</h3>
-                    <div class="form-group">
-                        <label for="annual_goals">
-                            Measurable annual goals designed to meet the learner's needs and enable progress in the general education curriculum <span class="required">*</span>
-                        </label>
-                        <textarea name="annual_goals" 
-                                  id="annual_goals" 
-                                  required
-                                  placeholder="List specific, measurable goals for the academic year..."><?= htmlspecialchars($form_data['annual_goals'] ?? $prepopulated['annual_goals'] ?? '') ?></textarea>
-                        <div class="character-count" id="annual_goals_count">0 characters</div>
-                        <div class="help-text">
-                            Goals should be specific, measurable, achievable, relevant, and time-bound (SMART goals).
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h3>Short-Term Objectives</h3>
-                    <div class="form-group">
-                        <label for="short_term_objectives">
-                            Short-term instructional objectives or benchmarks that support the annual goals <span class="required">*</span>
-                        </label>
-                        <textarea name="short_term_objectives" 
-                                  id="short_term_objectives" 
-                                  required
-                                  placeholder="Break down annual goals into smaller, achievable steps..."><?= htmlspecialchars($form_data['short_term_objectives'] ?? '') ?></textarea>
-                        <div class="character-count" id="short_term_objectives_count">0 characters</div>
-                        <div class="help-text">
-                            Objectives should be stepping stones toward achieving the annual goals.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h3>Special Education and Related Services</h3>
-                    <div class="form-group">
-                        <label for="special_education_services">
-                            Special education and related services to be provided <span class="required">*</span>
-                        </label>
-                        <textarea name="special_education_services" 
-                                  id="special_education_services" 
-                                  required
-                                  placeholder="Describe the special education services, related services, and supplementary aids..."><?= htmlspecialchars($form_data['special_education_services'] ?? '') ?></textarea>
-                        <div class="character-count" id="special_education_services_count">0 characters</div>
-                        <div class="help-text">
-                            Include frequency, location, duration, and personnel responsible for each service.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h3>Accommodations and Modifications</h3>
-                    <div class="form-group">
-                        <label for="accommodations">
-                            Program modifications or supports for school personnel <span class="required">*</span>
-                        </label>
-                        <textarea name="accommodations" 
-                                  id="accommodations" 
-                                  required
-                                  placeholder="List accommodations and modifications needed for the learner to access the curriculum..."><?= htmlspecialchars($form_data['accommodations'] ?? '') ?></textarea>
-                        <div class="character-count" id="accommodations_count">0 characters</div>
-                        <div class="help-text">
-                            Include classroom accommodations, testing modifications, and assistive technology needs.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h3>Progress Measurement</h3>
-                    <div class="form-group">
-                        <label for="progress_measurement">
-                            How progress toward annual goals will be measured and reported <span class="required">*</span>
-                        </label>
-                        <textarea name="progress_measurement" 
-                                  id="progress_measurement" 
-                                  required
-                                  placeholder="Describe methods for measuring and reporting progress..."><?= htmlspecialchars($form_data['progress_measurement'] ?? '') ?></textarea>
-                        <div class="character-count" id="progress_measurement_count">0 characters</div>
-                        <div class="help-text">
-                            Include assessment methods, frequency of progress reports, and criteria for success.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h3>IEP Duration</h3>
-                    <div class="date-group">
-                        <div class="form-group">
-                            <label for="start_date">Start Date <span class="required">*</span></label>
-                            <input type="date" 
-                                   name="start_date" 
-                                   id="start_date"
-                                   min="<?= date('Y-m-d') ?>"
-                                   value="<?= htmlspecialchars($form_data['start_date'] ?? $prepopulated['start_date'] ?? '') ?>"
-                                   required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="end_date">End Date <span class="required">*</span></label>
-                            <input type="date" 
-                                   name="end_date" 
-                                   id="end_date"
-                                   value="<?= htmlspecialchars($form_data['end_date'] ?? $prepopulated['end_date'] ?? '') ?>"
-                                   required>
-                        </div>
-                        
-                        <div style="color: #6B7280; font-size: 14px; align-self: center;">
-                            IEP typically covers one academic year
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" name="action" value="create" class="btn btn-primary">
-                        Create IEP
-                    </button>
-                    <button type="submit" name="action" value="draft" class="btn btn-draft" style="margin-left: 15px;">
-                        Save as Draft
-                    </button>
-                    <a href="/iep/list" class="btn btn-secondary" style="margin-left: 15px;">
-                        Cancel
-                    </a>
-                </div>
-            </form>
-        </div>
+<!-- Main Content -->
+<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+    
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <h1>
+            <i class="bi bi-file-earmark-medical me-2"></i>
+            <?php echo isset($data['existing_iep']) ? 'Edit IEP Draft' : 'Create IEP Draft'; ?>
+        </h1>
+        <p class="mb-0">Individualized Education Program for <?php echo htmlspecialchars($data['learner']->first_name . ' ' . $data['learner']->last_name); ?></p>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Character counting for textareas
-            const textareas = document.querySelectorAll('textarea');
-            textareas.forEach(textarea => {
-                const countElement = document.getElementById(textarea.id + '_count');
-                if (countElement) {
-                    function updateCount() {
-                        countElement.textContent = textarea.value.length + ' characters';
-                    }
-                    
-                    textarea.addEventListener('input', updateCount);
-                    updateCount(); // Initial count
-                }
-            });
-            
-            // Date validation
-            const startDateInput = document.getElementById('start_date');
-            const endDateInput = document.getElementById('end_date');
-            
-            startDateInput.addEventListener('change', function() {
-                if (this.value) {
-                    // Set minimum end date to start date + 1 day
-                    const startDate = new Date(this.value);
-                    startDate.setDate(startDate.getDate() + 1);
-                    endDateInput.min = startDate.toISOString().split('T')[0];
-                    
-                    // If end date is before start date, clear it
-                    if (endDateInput.value && new Date(endDateInput.value) <= new Date(this.value)) {
-                        endDateInput.value = '';
-                    }
-                }
-            });
-            
-            // Form validation
-            document.getElementById('iepForm').addEventListener('submit', function(e) {
-                const startDate = new Date(startDateInput.value);
-                const endDate = new Date(endDateInput.value);
-                
-                if (endDate <= startDate) {
-                    e.preventDefault();
-                    alert('End date must be after start date.');
-                    return;
-                }
-                
-                // Check if all required fields are filled
-                const requiredFields = this.querySelectorAll('[required]');
-                let allFilled = true;
-                
-                requiredFields.forEach(field => {
-                    if (!field.value.trim()) {
-                        allFilled = false;
-                        field.style.borderColor = '#EF4444';
-                    } else {
-                        field.style.borderColor = '#D1D5DB';
-                    }
-                });
-                
-                if (!allFilled) {
-                    e.preventDefault();
-                    alert('Please fill in all required fields.');
-                    return;
-                }
-                
-                // Confirm submission
-                const action = e.submitter.value;
-                const message = action === 'draft' 
-                    ? 'Save this IEP as a draft? You can continue editing it later.'
-                    : 'Create this IEP and submit it for principal approval? This action cannot be undone.';
-                
-                if (!confirm(message)) {
-                    e.preventDefault();
-                }
-            });
-            
-            // Auto-resize textareas
-            textareas.forEach(textarea => {
-                textarea.addEventListener('input', function() {
-                    this.style.height = 'auto';
-                    this.style.height = (this.scrollHeight) + 'px';
-                });
-                
-                // Initial resize
-                textarea.style.height = 'auto';
-                textarea.style.height = (textarea.scrollHeight) + 'px';
-            });
-        });
-    </script>
-</body>
-</html>
+    <!-- Success/Error Messages -->
+    <?php if (isset($_GET['success'])): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            <?php echo htmlspecialchars($_GET['success']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <?php if (isset($data['error'])): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <?php echo htmlspecialchars($data['error']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <?php if (isset($_GET['error'])): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <?php echo htmlspecialchars($_GET['error']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <!-- IEP Form -->
+    <form id="iep-form" method="POST" action="<?php echo URLROOT; ?>/iep/create?learner_id=<?php echo $data['learner']->id; ?>">
+        <input type="hidden" name="assessment_id" value="<?php echo $data['assessment']->id ?? ''; ?>">
+
+        <!-- Student Information (Read-only) -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-badge me-2"></i>
+                    Student Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Full Name</label>
+                        <input type="text" class="form-control bg-light" value="<?php echo htmlspecialchars($data['learner']->first_name . ' ' . ($data['learner']->middle_name ?? '') . ' ' . $data['learner']->last_name . ' ' . ($data['learner']->suffix ?? '')); ?>" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">LRN</label>
+                        <input type="text" class="form-control bg-light" value="<?php echo htmlspecialchars($data['learner']->lrn ?? 'N/A'); ?>" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Grade Level</label>
+                        <input type="text" class="form-control bg-light" value="<?php echo htmlspecialchars($data['learner']->grade_level ?? 'N/A'); ?>" readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <?php
+        // Parse existing draft data if available
+        $draftData = [];
+        if (isset($data['existing_iep']) && $data['existing_iep']->draft_data) {
+            $draftData = json_decode($data['existing_iep']->draft_data, true);
+        }
+        $existingGoals = $draftData['goals'] ?? [];
+        $existingServices = $draftData['services'] ?? [];
+        $existingAccommodations = $draftData['accommodations'] ?? [];
+        $existingRemarks = $draftData['remarks'] ?? '';
+        ?>
+
+        <!-- IEP Goals (Based on IEP P2.pdf) -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-bullseye me-2"></i>
+                    Developmental Domains & Goals
+                </h5>
+                <button type="button" class="btn btn-light btn-sm" onclick="addGoalRow()">
+                    <i class="bi bi-plus-circle me-1"></i> Add Goal
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="goals-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 15%;">Domain</th>
+                                <th style="width: 15%;">Skill</th>
+                                <th style="width: 20%;">Description</th>
+                                <th style="width: 8%;">Mastered?</th>
+                                <th style="width: 12%;">Quarter 1</th>
+                                <th style="width: 12%;">Quarter 2</th>
+                                <th style="width: 13%;">Performance Level</th>
+                                <th style="width: 5%;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="goals-tbody">
+                            <?php if (!empty($existingGoals)): ?>
+                                <?php foreach ($existingGoals as $index => $goal): ?>
+                                    <tr>
+                                        <td>
+                                            <select class="form-select form-select-sm" name="goals[<?php echo $index; ?>][domain]">
+                                                <option value="">Select Domain</option>
+                                                <option value="Perceptuo-Cognitive" <?php echo ($goal['domain'] ?? '') === 'Perceptuo-Cognitive' ? 'selected' : ''; ?>>Perceptuo-Cognitive</option>
+                                                <option value="Psychosocial" <?php echo ($goal['domain'] ?? '') === 'Psychosocial' ? 'selected' : ''; ?>>Psychosocial</option>
+                                                <option value="Psychomotor" <?php echo ($goal['domain'] ?? '') === 'Psychomotor' ? 'selected' : ''; ?>>Psychomotor</option>
+                                                <option value="Socio-Emotional" <?php echo ($goal['domain'] ?? '') === 'Socio-Emotional' ? 'selected' : ''; ?>>Socio-Emotional</option>
+                                                <option value="Daily Living Skills" <?php echo ($goal['domain'] ?? '') === 'Daily Living Skills' ? 'selected' : ''; ?>>Daily Living Skills</option>
+                                                <option value="Communication & Language" <?php echo ($goal['domain'] ?? '') === 'Communication & Language' ? 'selected' : ''; ?>>Communication & Language</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm" name="goals[<?php echo $index; ?>][skill]" value="<?php echo htmlspecialchars($goal['skill'] ?? ''); ?>" placeholder="Skill">
+                                        </td>
+                                        <td>
+                                            <textarea class="form-control form-control-sm" name="goals[<?php echo $index; ?>][description]" rows="2" placeholder="Description"><?php echo htmlspecialchars($goal['description'] ?? ''); ?></textarea>
+                                        </td>
+                                        <td>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="goals[<?php echo $index; ?>][mastered]" value="yes" <?php echo ($goal['mastered_yes'] ?? 0) == 1 ? 'checked' : ''; ?>>
+                                                <label class="form-check-label small">Yes</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="goals[<?php echo $index; ?>][mastered]" value="no" <?php echo ($goal['mastered_no'] ?? 0) == 1 ? 'checked' : ''; ?>>
+                                                <label class="form-check-label small">No</label>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <textarea class="form-control form-control-sm" name="goals[<?php echo $index; ?>][quarter1]" rows="2" placeholder="Q1 Recommendation"><?php echo htmlspecialchars($goal['quarter1_recommendation'] ?? ''); ?></textarea>
+                                        </td>
+                                        <td>
+                                            <textarea class="form-control form-control-sm" name="goals[<?php echo $index; ?>][quarter2]" rows="2" placeholder="Q2 Recommendation"><?php echo htmlspecialchars($goal['quarter2_recommendation'] ?? ''); ?></textarea>
+                                        </td>
+                                        <td>
+                                            <select class="form-select form-select-sm" name="goals[<?php echo $index; ?>][performance_level]">
+                                                <option value="">Select</option>
+                                                <option value="Beginning (74% below)" <?php echo ($goal['performance_level'] ?? '') === 'Beginning (74% below)' ? 'selected' : ''; ?>>Beginning (74% below)</option>
+                                                <option value="Developing (75-79%)" <?php echo ($goal['performance_level'] ?? '') === 'Developing (75-79%)' ? 'selected' : ''; ?>>Developing (75-79%)</option>
+                                                <option value="Approaching Proficiency (80-84%)" <?php echo ($goal['performance_level'] ?? '') === 'Approaching Proficiency (80-84%)' ? 'selected' : ''; ?>>Approaching Proficiency (80-84%)</option>
+                                                <option value="Proficient (85-89%)" <?php echo ($goal['performance_level'] ?? '') === 'Proficient (85-89%)' ? 'selected' : ''; ?>>Proficient (85-89%)</option>
+                                                <option value="Advanced (90%+)" <?php echo ($goal['performance_level'] ?? '') === 'Advanced (90%+)' ? 'selected' : ''; ?>>Advanced (90%+)</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-muted small mb-0 mt-2">
+                    <i class="bi bi-info-circle me-1"></i>
+                    At least 1 goal is required to send IEP
+                </p>
+            </div>
+        </div>
+
+        <!-- Special Education Services -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-heart-pulse me-2"></i>
+                    Special Education Services
+                </h5>
+                <button type="button" class="btn btn-light btn-sm" onclick="addServiceRow()">
+                    <i class="bi bi-plus-circle me-1"></i> Add Service
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="services-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 25%;">Service Type</th>
+                                <th style="width: 20%;">Provider</th>
+                                <th style="width: 20%;">Frequency</th>
+                                <th style="width: 15%;">Duration</th>
+                                <th style="width: 15%;">Location</th>
+                                <th style="width: 5%;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="services-tbody">
+                            <?php if (!empty($existingServices)): ?>
+                                <?php foreach ($existingServices as $index => $service): ?>
+                                    <tr>
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm" name="services[<?php echo $index; ?>][type]" value="<?php echo htmlspecialchars($service['service_type'] ?? ''); ?>" placeholder="e.g. Speech Therapy">
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm" name="services[<?php echo $index; ?>][provider]" value="<?php echo htmlspecialchars($service['provider'] ?? ''); ?>" placeholder="Provider name">
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm" name="services[<?php echo $index; ?>][frequency]" value="<?php echo htmlspecialchars($service['frequency'] ?? ''); ?>" placeholder="e.g. 2x per week">
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm" name="services[<?php echo $index; ?>][duration]" value="<?php echo htmlspecialchars($service['duration'] ?? ''); ?>" placeholder="e.g. 30 mins">
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm" name="services[<?php echo $index; ?>][location]" value="<?php echo htmlspecialchars($service['location'] ?? ''); ?>" placeholder="Location">
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-muted small mb-0 mt-2">
+                    <i class="bi bi-info-circle me-1"></i>
+                    At least 1 service is required to send IEP
+                </p>
+            </div>
+        </div>
+
+        <!-- Accommodations -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-gear me-2"></i>
+                    Accommodations
+                </h5>
+                <button type="button" class="btn btn-dark btn-sm" onclick="addAccommodationRow()">
+                    <i class="bi bi-plus-circle me-1"></i> Add Accommodation
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="accommodations-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 30%;">Accommodation Type</th>
+                                <th style="width: 65%;">Description</th>
+                                <th style="width: 5%;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accommodations-tbody">
+                            <?php if (!empty($existingAccommodations)): ?>
+                                <?php foreach ($existingAccommodations as $index => $accommodation): ?>
+                                    <tr>
+                                        <td>
+                                            <select class="form-select form-select-sm" name="accommodations[<?php echo $index; ?>][type]">
+                                                <option value="">Select Type</option>
+                                                <option value="Instructional" <?php echo ($accommodation['accommodation_type'] ?? '') === 'Instructional' ? 'selected' : ''; ?>>Instructional</option>
+                                                <option value="Environmental" <?php echo ($accommodation['accommodation_type'] ?? '') === 'Environmental' ? 'selected' : ''; ?>>Environmental</option>
+                                                <option value="Assessment" <?php echo ($accommodation['accommodation_type'] ?? '') === 'Assessment' ? 'selected' : ''; ?>>Assessment</option>
+                                                <option value="Behavioral" <?php echo ($accommodation['accommodation_type'] ?? '') === 'Behavioral' ? 'selected' : ''; ?>>Behavioral</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <textarea class="form-control form-control-sm" name="accommodations[<?php echo $index; ?>][description]" rows="2" placeholder="Describe the accommodation"><?php echo htmlspecialchars($accommodation['description'] ?? ''); ?></textarea>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-muted small mb-0 mt-2">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Accommodations are optional
+                </p>
+            </div>
+        </div>
+
+        <!-- Remarks -->
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-chat-left-text me-2"></i>
+                    Remarks
+                </h5>
+            </div>
+            <div class="card-body">
+                <textarea class="form-control" name="remarks" rows="4" placeholder="Additional notes or remarks (optional)"><?php echo htmlspecialchars($existingRemarks); ?></textarea>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="<?php echo URLROOT; ?>/iep/list" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Back to List
+                    </a>
+                    <div>
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="bi bi-save me-1"></i> Save Draft
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="sendIEP()">
+                            <i class="bi bi-send me-1"></i> Send IEP
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+</main>
+
+<!-- Send IEP Form (Hidden) -->
+<form id="send-iep-form" method="POST" action="<?php echo URLROOT; ?>/iep/send" style="display: none;">
+    <input type="hidden" name="iep_id" id="send-iep-id" value="<?php echo $data['existing_iep']->id ?? ''; ?>">
+</form>
+
+<script>
+let goalIndex = <?php echo !empty($existingGoals) ? count($existingGoals) : 0; ?>;
+let serviceIndex = <?php echo !empty($existingServices) ? count($existingServices) : 0; ?>;
+let accommodationIndex = <?php echo !empty($existingAccommodations) ? count($existingAccommodations) : 0; ?>;
+
+function addGoalRow() {
+    const tbody = document.getElementById('goals-tbody');
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>
+            <select class="form-select form-select-sm" name="goals[${goalIndex}][domain]">
+                <option value="">Select Domain</option>
+                <option value="Perceptuo-Cognitive">Perceptuo-Cognitive</option>
+                <option value="Psychosocial">Psychosocial</option>
+                <option value="Psychomotor">Psychomotor</option>
+                <option value="Socio-Emotional">Socio-Emotional</option>
+                <option value="Daily Living Skills">Daily Living Skills</option>
+                <option value="Communication & Language">Communication & Language</option>
+            </select>
+        </td>
+        <td>
+            <input type="text" class="form-control form-control-sm" name="goals[${goalIndex}][skill]" placeholder="Skill">
+        </td>
+        <td>
+            <textarea class="form-control form-control-sm" name="goals[${goalIndex}][description]" rows="2" placeholder="Description"></textarea>
+        </td>
+        <td>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="goals[${goalIndex}][mastered]" value="yes">
+                <label class="form-check-label small">Yes</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="goals[${goalIndex}][mastered]" value="no">
+                <label class="form-check-label small">No</label>
+            </div>
+        </td>
+        <td>
+            <textarea class="form-control form-control-sm" name="goals[${goalIndex}][quarter1]" rows="2" placeholder="Q1 Recommendation"></textarea>
+        </td>
+        <td>
+            <textarea class="form-control form-control-sm" name="goals[${goalIndex}][quarter2]" rows="2" placeholder="Q2 Recommendation"></textarea>
+        </td>
+        <td>
+            <select class="form-select form-select-sm" name="goals[${goalIndex}][performance_level]">
+                <option value="">Select</option>
+                <option value="Beginning (74% below)">Beginning (74% below)</option>
+                <option value="Developing (75-79%)">Developing (75-79%)</option>
+                <option value="Approaching Proficiency (80-84%)">Approaching Proficiency (80-84%)</option>
+                <option value="Proficient (85-89%)">Proficient (85-89%)</option>
+                <option value="Advanced (90%+)">Advanced (90%+)</option>
+            </select>
+        </td>
+        <td>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+    `;
+    tbody.appendChild(row);
+    goalIndex++;
+}
+
+function addServiceRow() {
+    const tbody = document.getElementById('services-tbody');
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>
+            <input type="text" class="form-control form-control-sm" name="services[${serviceIndex}][type]" placeholder="e.g. Speech Therapy">
+        </td>
+        <td>
+            <input type="text" class="form-control form-control-sm" name="services[${serviceIndex}][provider]" placeholder="Provider name">
+        </td>
+        <td>
+            <input type="text" class="form-control form-control-sm" name="services[${serviceIndex}][frequency]" placeholder="e.g. 2x per week">
+        </td>
+        <td>
+            <input type="text" class="form-control form-control-sm" name="services[${serviceIndex}][duration]" placeholder="e.g. 30 mins">
+        </td>
+        <td>
+            <input type="text" class="form-control form-control-sm" name="services[${serviceIndex}][location]" placeholder="Location">
+        </td>
+        <td>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+    `;
+    tbody.appendChild(row);
+    serviceIndex++;
+}
+
+function addAccommodationRow() {
+    const tbody = document.getElementById('accommodations-tbody');
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>
+            <select class="form-select form-select-sm" name="accommodations[${accommodationIndex}][type]">
+                <option value="">Select Type</option>
+                <option value="Instructional">Instructional</option>
+                <option value="Environmental">Environmental</option>
+                <option value="Assessment">Assessment</option>
+                <option value="Behavioral">Behavioral</option>
+            </select>
+        </td>
+        <td>
+            <textarea class="form-control form-control-sm" name="accommodations[${accommodationIndex}][description]" rows="2" placeholder="Describe the accommodation"></textarea>
+        </td>
+        <td>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+    `;
+    tbody.appendChild(row);
+    accommodationIndex++;
+}
+
+function removeRow(button) {
+    button.closest('tr').remove();
+}
+
+function sendIEP() {
+    <?php if (isset($data['existing_iep'])): ?>
+        if (confirm('Are you sure you want to send this IEP? This will proceed to meeting scheduling.\n\nMinimum requirements:\n- At least 1 goal\n- At least 1 service')) {
+            document.getElementById('send-iep-form').submit();
+        }
+    <?php else: ?>
+        alert('Please save the IEP draft first before sending.');
+    <?php endif; ?>
+}
+
+// Auto-save draft every 5 minutes
+setInterval(function() {
+    const form = document.getElementById('iep-form');
+    const formData = new FormData(form);
+    
+    fetch(form.action, {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        if (response.ok) {
+            console.log('Draft auto-saved');
+        }
+    });
+}, 300000); // 5 minutes
+</script>
+
+<?php require_once '../app/views/layouts/footer.php'; ?>

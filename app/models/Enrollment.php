@@ -157,18 +157,20 @@ class Enrollment extends Model
 
     /**
      * Check if all required documents are uploaded
+     * Only PSA Birth Certificate is required
      */
     public function hasAllDocuments($enrollmentId)
     {
-        $sql = "SELECT COUNT(DISTINCT document_type) as doc_count 
+        $sql = "SELECT COUNT(*) as doc_count 
                 FROM enrollment_documents 
-                WHERE enrollment_id = :enrollment_id";
+                WHERE enrollment_id = :enrollment_id 
+                AND document_type = 'psa'";
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':enrollment_id' => $enrollmentId]);
 
         $result = $stmt->fetch(PDO::FETCH_OBJ);
-        return $result->doc_count >= 4; // PSA, PWD_ID, Medical_Record, BEEF
+        return $result->doc_count >= 1; // Only PSA is required
     }
 
     /**
@@ -248,5 +250,20 @@ class Enrollment extends Model
         $stmt->execute();
         
         return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    /**
+     * Mark LRN as generated for enrollment
+     */
+    public function markLRNGenerated($enrollmentId)
+    {
+        $sql = "UPDATE enrollments 
+                SET lrn_generated = TRUE, 
+                    lrn_generated_at = CURRENT_TIMESTAMP 
+                WHERE id = :id";
+
+        $stmt = $this->db->prepare($sql);
+
+        return $stmt->execute([':id' => $enrollmentId]);
     }
 }

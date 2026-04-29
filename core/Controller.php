@@ -13,20 +13,24 @@ class Controller
     }
     public function view($view, $data = [])
     {
-        if (file_exists('../app/views/' . $view . '.php')) {
-            require_once '../app/views/' . $view . '.php';
+        $viewPath = '../app/views/' . $view . '.php';
+        
+        if (file_exists($viewPath)) {
+            require_once $viewPath;
         } else {
-            die('View does not exist.');
+            $this->handleViewNotFound($view);
         }
     }
 
     public function model($model)
     {
-        if (file_exists('../app/models/' . $model . '.php')) {
-            require_once '../app/models/' . $model . '.php';
+        $modelPath = '../app/models/' . $model . '.php';
+        
+        if (file_exists($modelPath)) {
+            require_once $modelPath;
             return new $model();
         } else {
-            die('Model does not exist.');
+            $this->handleModelNotFound($model);
         }
     }
 
@@ -56,7 +60,7 @@ class Controller
     public function requireRole($role)
     {
         if (!isset($_SESSION['role']) || $_SESSION['role'] != $role) {
-            die('Access denied.');
+            $this->handleAccessDenied('Insufficient permissions for this action.');
         }
     }
 
@@ -67,11 +71,11 @@ class Controller
         $this->checkSessionTimeout();
 
         if (!isset($_SESSION['role'])) {
-            die('Access denied: No role assigned.');
+            $this->handleAccessDenied('No role assigned to your account.');
         }
 
         if (!in_array($_SESSION['role'], $allowedRoles)) {
-            die('Access denied: Insufficient permissions.');
+            $this->handleAccessDenied('Insufficient permissions for this action.');
         }
     }
 
@@ -82,11 +86,11 @@ class Controller
         $this->checkSessionTimeout();
 
         if (!isset($_SESSION['role'])) {
-            die('Access denied: No role assigned.');
+            $this->handleAccessDenied('No role assigned to your account.');
         }
 
         if (!in_array($_SESSION['role'], $allowedRoles)) {
-            die('Access denied: Insufficient permissions.');
+            $this->handleAccessDenied('Insufficient permissions for this action.');
         }
     }
 
@@ -212,5 +216,161 @@ class Controller
             $this->getUserIpAddress(),
             $this->getUserAgent()
         );
+    }
+
+    /**
+     * Handle view not found error
+     */
+    protected function handleViewNotFound($view)
+    {
+        http_response_code(500);
+        $this->logError("View not found: $view");
+        
+        if (APP_ENV === 'production') {
+            $this->showErrorPage('Page Not Found', 'The requested page could not be found.');
+        } else {
+            die("View does not exist: $view");
+        }
+    }
+
+    /**
+     * Handle model not found error
+     */
+    protected function handleModelNotFound($model)
+    {
+        http_response_code(500);
+        $this->logError("Model not found: $model");
+        
+        if (APP_ENV === 'production') {
+            $this->showErrorPage('System Error', 'A system error occurred. Please try again later.');
+        } else {
+            die("Model does not exist: $model");
+        }
+    }
+
+    /**
+     * Handle access denied error
+     */
+    protected function handleAccessDenied($message = 'Access denied')
+    {
+        http_response_code(403);
+        $this->logError("Access denied: $message - User: " . $this->getCurrentUserId());
+        
+        $this->showErrorPage('Access Denied', $message);
+    }
+
+    /**
+     * Log error to file
+     */
+    protected function logError($message)
+    {
+        $logDir = dirname(__DIR__) . '/logs';
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0755, true);
+        }
+
+        $logFile = $logDir . '/error.log';
+        $timestamp = date('Y-m-d H:i:s');
+        $userId = $this->getCurrentUserId() ?? 'guest';
+        $ip = $this->getUserIpAddress();
+        
+        $logMessage = "[$timestamp] User: $userId | IP: $ip | Error: $message\n";
+        error_log($logMessage, 3, $logFile);
+    }
+
+    /**
+     * Show user-friendly error page
+     */
+    protected function showErrorPage($title, $message)
+    {
+        ?>
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title><?php echo htmlspecialchars($title); ?> - SignED</title>
+            <style>
+                body {
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    background: linear-gradient(135deg, #a01422 0%, #1e4072 100%);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 100vh;
+                    margin: 0;
+                    padding: 20px;
+                }
+                .error-container {
+                    background: white;
+                    border-radius: 20px;
+                    padding: 40px;
+                    max-width: 500px;
+                    text-align: center;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                }
+                .error-icon {
+                    font-size: 64px;
+                    margin-bottom: 20px;
+                }
+                .error-403 { color: #f59e0b; }
+                .error-404 { color: #3b82f6; }
+                .error-500 { color: #ef4444; }
+                h1 {
+                    color: #1e293b;
+                    font-size: 24px;
+                    margin-bottom: 10px;
+                }
+                p {
+                    color: #64748b;
+                    line-height: 1.6;
+                    margin-bottom: 20px;
+                }
+                .btn {
+                    display: inline-block;
+                    padding: 12px 30px;
+                    background: linear-gradient(135deg, #a01422 0%, #8a1119 100%);
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 10px;
+                    font-weight: 600;
+                    transition: all 0.3s ease;
+                    margin: 5px;
+                }
+                .btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(160, 20, 34, 0.4);
+                }
+                .btn-secondary {
+                    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+                }
+            </style>
+        </head>
+        <body>
+            <div class="error-container">
+                <div class="error-icon error-<?php echo http_response_code(); ?>">
+                    <?php if (http_response_code() == 403): ?>
+                        🔒
+                    <?php elseif (http_response_code() == 404): ?>
+                        🔍
+                    <?php else: ?>
+                        ⚠️
+                    <?php endif; ?>
+                </div>
+                <h1><?php echo htmlspecialchars($title); ?></h1>
+                <p><?php echo htmlspecialchars($message); ?></p>
+                <div>
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        <a href="javascript:history.back()" class="btn btn-secondary">Go Back</a>
+                        <a href="<?php echo URLROOT; ?>/<?php echo $_SESSION['role'] ?? 'user'; ?>/dashboard" class="btn">Dashboard</a>
+                    <?php else: ?>
+                        <a href="<?php echo URLROOT; ?>/auth/login" class="btn">Return to Login</a>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </body>
+        </html>
+        <?php
+        exit;
     }
 }

@@ -656,4 +656,22 @@ class AuditLog extends Model
             return false;
         }
     }
+
+    /**
+     * Log action (alias for log method)
+     * Used by AdminController and other controllers
+     */
+    public function logAction($userId, $actionType, $entityType = null, $entityId = null, $description = null)
+    {
+        return $this->log(
+            $userId,
+            $actionType,
+            $entityType,
+            $entityId,
+            null, // old_value
+            $description, // new_value (description)
+            $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+            $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
+        );
+    }
 }

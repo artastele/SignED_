@@ -1,478 +1,339 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Review Enrollment - SignED SPED</title>
-    <link rel="stylesheet" href="<?php echo URLROOT; ?>/assets/css/style.css">
-    <style>
-        .review-container {
-            max-width: 1000px;
-            margin: 2rem auto;
-            padding: 2rem;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .header-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #E5E7EB;
-        }
-        
-        .enrollment-info {
-            background-color: #F9FAFB;
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-        }
-        
-        .info-item {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .info-label {
-            font-size: 0.875rem;
-            color: #6B7280;
-            margin-bottom: 0.25rem;
-        }
-        
-        .info-value {
-            font-weight: 600;
-            color: #374151;
-        }
-        
-        .documents-section {
-            margin-bottom: 2rem;
-        }
-        
-        .documents-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-        
-        .document-card {
-            border: 1px solid #E5E7EB;
-            border-radius: 8px;
-            padding: 1.5rem;
-            background: white;
-        }
-        
-        .document-card.uploaded {
-            border-color: #10B981;
-            background-color: #F0FDF4;
-        }
-        
-        .document-card.missing {
-            border-color: #EF4444;
-            background-color: #FEF2F2;
-        }
-        
-        .document-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-        
-        .document-title {
-            font-weight: 600;
-            color: #374151;
-        }
-        
-        .document-status {
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-        
-        .status-uploaded {
-            background-color: #D1FAE5;
-            color: #065F46;
-        }
-        
-        .status-missing {
-            background-color: #FEE2E2;
-            color: #991B1B;
-        }
-        
-        .document-details {
-            margin-bottom: 1rem;
-        }
-        
-        .document-meta {
-            font-size: 0.875rem;
-            color: #6B7280;
-            margin-bottom: 0.5rem;
-        }
-        
-        .btn {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 4px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-            margin-right: 0.5rem;
-        }
-        
-        .btn-primary {
-            background-color: #1E40AF;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background-color: #1D4ED8;
-        }
-        
-        .btn-success {
-            background-color: #10B981;
-            color: white;
-        }
-        
-        .btn-success:hover {
-            background-color: #059669;
-        }
-        
-        .btn-danger {
-            background-color: #EF4444;
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background-color: #DC2626;
-        }
-        
-        .btn-secondary {
-            background-color: #6B7280;
-            color: white;
-        }
-        
-        .actions-section {
-            background-color: #F9FAFB;
-            border-radius: 8px;
-            padding: 1.5rem;
-            text-align: center;
-        }
-        
-        .actions-section h3 {
-            margin-bottom: 1rem;
-            color: #374151;
-        }
-        
-        .completion-status {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-            padding: 1rem;
-            border-radius: 4px;
-        }
-        
-        .completion-status.complete {
-            background-color: #D1FAE5;
-            color: #065F46;
-        }
-        
-        .completion-status.incomplete {
-            background-color: #FEE2E2;
-            color: #991B1B;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-        }
-        
-        .modal-content {
-            background-color: white;
-            margin: 5% auto;
-            padding: 2rem;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 500px;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-        
-        .close {
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #6B7280;
-        }
-        
-        .close:hover {
-            color: #374151;
-        }
-        
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-        
-        .form-group textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #D1D5DB;
-            border-radius: 4px;
-            resize: vertical;
-            min-height: 100px;
-        }
-        
-        .document-preview {
-            max-width: 100%;
-            max-height: 200px;
-            border-radius: 4px;
-            margin-top: 0.5rem;
-        }
-    </style>
-</head>
-<body>
-    <div class="review-container">
-        <div class="header-section">
+<?php require_once '../app/views/layouts/header.php'; ?>
+
+<!-- Sidebar -->
+<?php require_once '../app/views/layouts/sidebar.php'; ?>
+
+<!-- Main Content -->
+<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+    
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
             <div>
-                <h1>Review Enrollment Application</h1>
-                <p>Verify documents and approve or reject the enrollment</p>
+                <h1>
+                    <i class="bi bi-file-earmark-check me-2"></i>
+                    Review Enrollment Application
+                </h1>
+                <p class="mb-0">Verify documents and approve or reject the enrollment</p>
             </div>
-            <div>
-                <a href="<?php echo URLROOT; ?>/enrollment/verify" class="btn btn-secondary">Back to Verification</a>
-            </div>
+            <a href="<?php echo URLROOT; ?>/enrollment/verify" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Verification
+            </a>
         </div>
-        
-        <div class="enrollment-info">
-            <h3>Student Information</h3>
-            <div class="info-grid">
-                <div class="info-item">
-                    <div class="info-label">Student Name</div>
-                    <div class="info-value"><?php echo htmlspecialchars($enrollment->learner_first_name . ' ' . $enrollment->learner_last_name); ?></div>
+    </div>
+    
+    <!-- Student Information Card -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="bi bi-person-badge me-2"></i>Student Information
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="mb-0">
+                        <small class="text-muted d-block mb-1">Student Name</small>
+                        <strong><?php echo htmlspecialchars($data['enrollment']->learner_first_name . ' ' . $data['enrollment']->learner_last_name); ?></strong>
+                    </div>
                 </div>
-                <div class="info-item">
-                    <div class="info-label">Date of Birth</div>
-                    <div class="info-value"><?php echo date('F j, Y', strtotime($enrollment->learner_dob)); ?></div>
+                <div class="col-md-4">
+                    <div class="mb-0">
+                        <small class="text-muted d-block mb-1">Date of Birth</small>
+                        <strong><?php echo date('F j, Y', strtotime($data['enrollment']->learner_dob)); ?></strong>
+                    </div>
                 </div>
-                <div class="info-item">
-                    <div class="info-label">Grade Level</div>
-                    <div class="info-value"><?php echo htmlspecialchars($enrollment->learner_grade); ?></div>
+                <div class="col-md-4">
+                    <div class="mb-0">
+                        <small class="text-muted d-block mb-1">Grade Level</small>
+                        <strong><?php echo htmlspecialchars($data['enrollment']->learner_grade); ?></strong>
+                    </div>
                 </div>
-                <div class="info-item">
-                    <div class="info-label">Parent/Guardian</div>
-                    <div class="info-value"><?php echo htmlspecialchars($enrollment->parent_name); ?></div>
+                <div class="col-md-4">
+                    <div class="mb-0">
+                        <small class="text-muted d-block mb-1">Parent/Guardian</small>
+                        <strong><?php echo htmlspecialchars($data['enrollment']->parent_name); ?></strong>
+                    </div>
                 </div>
-                <div class="info-item">
-                    <div class="info-label">Parent Email</div>
-                    <div class="info-value"><?php echo htmlspecialchars($enrollment->parent_email); ?></div>
+                <div class="col-md-4">
+                    <div class="mb-0">
+                        <small class="text-muted d-block mb-1">Parent Email</small>
+                        <strong><?php echo htmlspecialchars($data['enrollment']->parent_email); ?></strong>
+                    </div>
                 </div>
-                <div class="info-item">
-                    <div class="info-label">Submission Date</div>
-                    <div class="info-value"><?php echo date('F j, Y g:i A', strtotime($enrollment->created_at)); ?></div>
+                <div class="col-md-4">
+                    <div class="mb-0">
+                        <small class="text-muted d-block mb-1">Submission Date</small>
+                        <strong><?php echo date('F j, Y g:i A', strtotime($data['enrollment']->created_at)); ?></strong>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="documents-section">
-            <h3>Required Documents</h3>
+    </div>
+    
+    <!-- Required Documents Card -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="bi bi-files me-2"></i>Required Documents
+        </div>
+        <div class="card-body">
             
             <?php
+            // Define document types with their requirements
             $requiredTypes = [
-                'psa' => 'PSA Birth Certificate',
-                'pwd_id' => 'PWD ID Card',
-                'medical_record' => 'Medical Records',
-                'beef' => 'Basic Education Enrollment Form (BEEF)'
+                'beef' => [
+                    'title' => 'Basic Education Enrollment Form (BEEF)',
+                    'required' => true,
+                    'description' => 'Basic Education Enrollment Form from DepEd',
+                    'already_submitted' => true // BEEF is submitted during enrollment
+                ],
+                'psa' => [
+                    'title' => 'PSA Birth Certificate',
+                    'required' => true,
+                    'description' => 'Official birth certificate from Philippine Statistics Authority'
+                ],
+                'pwd_id' => [
+                    'title' => 'PWD ID Card',
+                    'required' => false,
+                    'description' => 'Person with Disability identification card (if available)'
+                ],
+                'medical_record' => [
+                    'title' => 'Medical Records',
+                    'required' => false,
+                    'description' => 'Medical documentation supporting disability status (if available)'
+                ]
             ];
             
+            // Create array of uploaded document types
             $uploadedTypes = [];
-            foreach ($documents as $doc) {
+            foreach ($data['documents'] as $doc) {
                 $uploadedTypes[$doc->document_type] = $doc;
             }
             
-            $completedCount = count($documents);
-            $totalRequired = 4;
+            // Count only required documents
+            $requiredCount = 0;
+            $uploadedRequiredCount = 0;
+            foreach ($requiredTypes as $type => $info) {
+                if ($info['required']) {
+                    $requiredCount++;
+                    if (isset($uploadedTypes[$type]) || ($type === 'beef' && $info['already_submitted'])) {
+                        $uploadedRequiredCount++;
+                    }
+                }
+            }
+            
+            $allRequiredUploaded = ($uploadedRequiredCount >= $requiredCount);
             ?>
             
-            <div class="completion-status <?php echo $completedCount >= $totalRequired ? 'complete' : 'incomplete'; ?>">
-                <?php if ($completedCount >= $totalRequired): ?>
-                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/>
-                    </svg>
-                    <strong>All required documents uploaded (<?php echo $completedCount; ?>/<?php echo $totalRequired; ?>)</strong>
-                <?php else: ?>
-                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-                    </svg>
-                    <strong>Missing documents (<?php echo $completedCount; ?>/<?php echo $totalRequired; ?> uploaded)</strong>
-                <?php endif; ?>
+            <!-- Completion Status -->
+            <div class="alert <?php echo $allRequiredUploaded ? 'alert-success' : 'alert-warning'; ?> d-flex align-items-center mb-4">
+                <i class="bi <?php echo $allRequiredUploaded ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'; ?> fs-4 me-3"></i>
+                <div>
+                    <?php if ($allRequiredUploaded): ?>
+                        <strong>All required documents submitted</strong> (<?php echo $uploadedRequiredCount; ?>/<?php echo $requiredCount; ?>)
+                        <br><small>This enrollment is ready for verification.</small>
+                    <?php else: ?>
+                        <strong>Missing required documents</strong> (<?php echo $uploadedRequiredCount; ?>/<?php echo $requiredCount; ?>)
+                        <br><small>Please contact the parent to upload the missing required documents.</small>
+                    <?php endif; ?>
+                </div>
             </div>
             
-            <div class="documents-grid">
-                <?php foreach ($requiredTypes as $type => $title): ?>
-                    <div class="document-card <?php echo isset($uploadedTypes[$type]) ? 'uploaded' : 'missing'; ?>">
-                        <div class="document-header">
-                            <div class="document-title"><?php echo htmlspecialchars($title); ?></div>
-                            <div class="document-status <?php echo isset($uploadedTypes[$type]) ? 'status-uploaded' : 'status-missing'; ?>">
-                                <?php echo isset($uploadedTypes[$type]) ? 'Uploaded' : 'Missing'; ?>
-                            </div>
-                        </div>
-                        
-                        <?php if (isset($uploadedTypes[$type])): ?>
-                            <div class="document-details">
-                                <div class="document-meta">
-                                    <strong>Filename:</strong> <?php echo htmlspecialchars($uploadedTypes[$type]->original_filename); ?><br>
-                                    <strong>Size:</strong> <?php echo number_format($uploadedTypes[$type]->file_size / 1024, 1); ?> KB<br>
-                                    <strong>Type:</strong> <?php echo htmlspecialchars($uploadedTypes[$type]->mime_type); ?><br>
-                                    <strong>Uploaded:</strong> <?php echo date('M j, Y g:i A', strtotime($uploadedTypes[$type]->uploaded_at)); ?>
+            <!-- Documents Grid -->
+            <div class="row g-3">
+                <?php foreach ($requiredTypes as $type => $info): ?>
+                    <?php 
+                    $isUploaded = isset($uploadedTypes[$type]);
+                    $isBeefSubmitted = ($type === 'beef' && $info['already_submitted']);
+                    $hasDocument = $isUploaded || $isBeefSubmitted;
+                    ?>
+                    
+                    <div class="col-md-6">
+                        <div class="card h-100 <?php echo $hasDocument ? 'border-success' : ($info['required'] ? 'border-danger' : 'border-secondary'); ?>" style="border-width: 2px;">
+                            <div class="card-body">
+                                <!-- Document Header -->
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">
+                                            <?php echo htmlspecialchars($info['title']); ?>
+                                            <?php if (!$info['required']): ?>
+                                                <span class="badge bg-secondary ms-2">Optional</span>
+                                            <?php endif; ?>
+                                        </h6>
+                                        <small class="text-muted"><?php echo $info['description']; ?></small>
+                                    </div>
+                                    <div class="ms-2">
+                                        <?php if ($hasDocument): ?>
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle me-1"></i>
+                                                <?php echo $isBeefSubmitted ? 'Submitted' : 'Uploaded'; ?>
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="badge bg-<?php echo $info['required'] ? 'danger' : 'secondary'; ?>">
+                                                <i class="bi bi-x-circle me-1"></i>Missing
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
                                 
-                                <div>
-                                    <a href="<?php echo URLROOT; ?>/enrollment/download?doc_id=<?php echo $uploadedTypes[$type]->id; ?>" 
-                                       class="btn btn-primary" target="_blank">
-                                        Download & Review
+                                <!-- Document Details -->
+                                <?php if ($isUploaded): ?>
+                                    <div class="bg-light p-3 rounded mb-3">
+                                        <div class="small">
+                                            <div class="mb-1">
+                                                <i class="bi bi-file-earmark text-brand-blue me-2"></i>
+                                                <strong>Filename:</strong> <?php echo htmlspecialchars($uploadedTypes[$type]->original_filename); ?>
+                                            </div>
+                                            <div class="mb-1">
+                                                <i class="bi bi-hdd text-brand-blue me-2"></i>
+                                                <strong>Size:</strong> <?php echo number_format($uploadedTypes[$type]->file_size / 1024, 1); ?> KB
+                                            </div>
+                                            <div class="mb-1">
+                                                <i class="bi bi-filetype-pdf text-brand-blue me-2"></i>
+                                                <strong>Type:</strong> <?php echo htmlspecialchars($uploadedTypes[$type]->mime_type); ?>
+                                            </div>
+                                            <div>
+                                                <i class="bi bi-calendar-check text-brand-blue me-2"></i>
+                                                <strong>Uploaded:</strong> <?php echo date('M j, Y g:i A', strtotime($uploadedTypes[$type]->uploaded_at)); ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <a href="<?php echo URLROOT; ?>/enrollment/viewDocument?doc_id=<?php echo $uploadedTypes[$type]->id; ?>" 
+                                       class="btn btn-primary btn-sm w-100" target="_blank">
+                                        <i class="bi bi-eye me-2"></i>View Document
                                     </a>
-                                </div>
+                                    
+                                <?php elseif ($isBeefSubmitted): ?>
+                                    <div class="bg-light p-3 rounded mb-3">
+                                        <div class="text-center text-success">
+                                            <i class="bi bi-check-circle-fill fs-3 mb-2"></i>
+                                            <p class="mb-0 small">BEEF form was completed during enrollment submission.</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <a href="<?php echo URLROOT; ?>/enrollment/viewBeef?id=<?php echo $data['enrollment']->id; ?>" 
+                                       class="btn btn-primary btn-sm w-100" target="_blank">
+                                        <i class="bi bi-eye me-2"></i>View BEEF Form
+                                    </a>
+                                    
+                                <?php else: ?>
+                                    <div class="bg-light p-3 rounded">
+                                        <div class="text-center text-<?php echo $info['required'] ? 'danger' : 'muted'; ?>">
+                                            <i class="bi bi-<?php echo $info['required'] ? 'exclamation-circle' : 'info-circle'; ?>-fill fs-3 mb-2"></i>
+                                            <p class="mb-0 small">
+                                                <?php if ($info['required']): ?>
+                                                    This required document has not been uploaded by the parent.
+                                                <?php else: ?>
+                                                    This optional document has not been uploaded.
+                                                <?php endif; ?>
+                                            </p>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
                             </div>
-                        <?php else: ?>
-                            <div class="document-details">
-                                <div class="document-meta" style="color: #991B1B;">
-                                    This required document has not been uploaded by the parent.
-                                </div>
-                            </div>
-                        <?php endif; ?>
-                        
-                        <div style="font-size: 0.875rem; color: #6B7280; margin-top: 1rem;">
-                            <?php
-                            switch($type) {
-                                case 'psa':
-                                    echo 'Official birth certificate from Philippine Statistics Authority';
-                                    break;
-                                case 'pwd_id':
-                                    echo 'Person with Disability identification card';
-                                    break;
-                                case 'medical_record':
-                                    echo 'Medical documentation supporting disability status';
-                                    break;
-                                case 'beef':
-                                    echo 'Basic Education Enrollment Form from DepEd';
-                                    break;
-                            }
-                            ?>
                         </div>
                     </div>
                 <?php endforeach; ?>
             </div>
-        </div>
-        
-        <div class="actions-section">
-            <h3>Verification Decision</h3>
             
-            <?php if ($completedCount >= $totalRequired): ?>
-                <p>All required documents have been uploaded. You can now approve or reject this enrollment.</p>
-                
-                <div style="margin-top: 1.5rem;">
+            <!-- Action Buttons -->
+            <?php if ($allRequiredUploaded && $data['enrollment']->status !== 'approved'): ?>
+                <div class="d-flex gap-2 justify-content-center mt-4">
                     <form method="POST" action="<?php echo URLROOT; ?>/enrollment/approve" style="display: inline;">
-                        <input type="hidden" name="enrollment_id" value="<?php echo $enrollment->id; ?>">
+                        <input type="hidden" name="enrollment_id" value="<?php echo $data['enrollment']->id; ?>">
                         <button type="submit" class="btn btn-success" 
-                                onclick="return confirm('Are you sure you want to approve this enrollment? This will create a learner record and send a notification email.')">
-                            ✓ Approve Enrollment
+                                onclick="return confirm('Approve this enrollment?')">
+                            <i class="bi bi-check-circle me-2"></i>Approve
                         </button>
                     </form>
                     
                     <button class="btn btn-danger" 
-                            onclick="showRejectModal(<?php echo $enrollment->id; ?>, '<?php echo htmlspecialchars($enrollment->learner_first_name . ' ' . $enrollment->learner_last_name); ?>')">
-                        ✗ Reject Enrollment
+                            data-bs-toggle="modal" 
+                            data-bs-target="#rejectModal"
+                            onclick="setRejectData(<?php echo $data['enrollment']->id; ?>, '<?php echo htmlspecialchars($data['enrollment']->learner_first_name . ' ' . $data['enrollment']->learner_last_name); ?>')">
+                        <i class="bi bi-x-circle me-2"></i>Reject
                     </button>
                 </div>
+            <?php elseif ($data['enrollment']->status === 'approved'): ?>
+                <div class="alert alert-success text-center mt-4">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <strong>This enrollment has been approved</strong>
+                    <?php if ($data['enrollment']->verified_at): ?>
+                        <br><small>Approved on <?php echo date('F j, Y g:i A', strtotime($data['enrollment']->verified_at)); ?></small>
+                    <?php endif; ?>
+                </div>
             <?php else: ?>
-                <p style="color: #991B1B;">This enrollment cannot be processed until all required documents are uploaded.</p>
-                <p>Please contact the parent to upload the missing documents.</p>
+                <div class="text-center mt-4">
+                    <p class="text-warning mb-3">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Missing required documents. Please contact the parent.
+                    </p>
+                </div>
             <?php endif; ?>
         </div>
     </div>
     
-    <!-- Rejection Modal -->
-    <div id="rejectModal" class="modal">
+</main>
+
+<!-- Rejection Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3>Reject Enrollment</h3>
-                <span class="close" onclick="closeRejectModal()">&times;</span>
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="rejectModalLabel">
+                    <i class="bi bi-x-circle me-2"></i>Reject Enrollment
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             
             <form method="POST" action="<?php echo URLROOT; ?>/enrollment/reject" id="rejectForm">
-                <input type="hidden" name="enrollment_id" id="rejectEnrollmentId">
-                
-                <p>You are about to reject the enrollment for <strong id="rejectStudentName"></strong>.</p>
-                
-                <div class="form-group">
-                    <label for="rejection_reason">Reason for Rejection <span style="color: #EF4444;">*</span></label>
-                    <textarea name="rejection_reason" id="rejection_reason" required 
-                              placeholder="Please provide a detailed reason for rejecting this enrollment. This will be sent to the parent via email."></textarea>
+                <div class="modal-body">
+                    <input type="hidden" name="enrollment_id" id="rejectEnrollmentId">
+                    
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        You are about to reject the enrollment for <strong id="rejectStudentName"></strong>.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="rejection_reason" class="form-label">
+                            Reason for Rejection <span class="text-danger">*</span>
+                        </label>
+                        <textarea name="rejection_reason" 
+                                  id="rejection_reason" 
+                                  class="form-control" 
+                                  rows="4" 
+                                  required 
+                                  placeholder="Please provide a detailed reason for rejecting this enrollment. This will be sent to the parent via email."></textarea>
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            The parent will receive this reason via email notification.
+                        </div>
+                    </div>
                 </div>
                 
-                <div style="text-align: right; margin-top: 1.5rem;">
-                    <button type="button" class="btn btn-secondary" onclick="closeRejectModal()">Cancel</button>
-                    <button type="submit" class="btn btn-danger" style="margin-left: 0.5rem;">Reject Enrollment</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x me-2"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-x-circle me-2"></i>Reject Enrollment
+                    </button>
                 </div>
             </form>
         </div>
     </div>
-    
-    <script>
-        function showRejectModal(enrollmentId, studentName) {
-            document.getElementById('rejectEnrollmentId').value = enrollmentId;
-            document.getElementById('rejectStudentName').textContent = studentName;
-            document.getElementById('rejection_reason').value = '';
-            document.getElementById('rejectModal').style.display = 'block';
-        }
-        
-        function closeRejectModal() {
-            document.getElementById('rejectModal').style.display = 'none';
-        }
-        
-        // Close modal when clicking outside of it
-        window.onclick = function(event) {
-            const modal = document.getElementById('rejectModal');
-            if (event.target === modal) {
-                closeRejectModal();
-            }
-        }
-        
-        // Close modal with Escape key
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                closeRejectModal();
-            }
-        });
-    </script>
+</div>
+
+<!-- Bootstrap 5 JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+function setRejectData(enrollmentId, studentName) {
+    document.getElementById('rejectEnrollmentId').value = enrollmentId;
+    document.getElementById('rejectStudentName').textContent = studentName;
+    document.getElementById('rejection_reason').value = '';
+}
+</script>
+
 </body>
 </html>

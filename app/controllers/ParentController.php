@@ -22,16 +22,8 @@ class ParentController extends Controller
         $parentId = $_SESSION['user_id'];
 
         // Get announcements for parents
-        $announcementsSql = "SELECT * FROM announcements 
-                            WHERE (target_role = 'parent' OR target_role = 'all') 
-                            AND is_active = 1 
-                            AND (expires_at IS NULL OR expires_at > NOW())
-                            ORDER BY priority DESC, created_at DESC 
-                            LIMIT 5";
-        
-        $stmt = $this->db->prepare($announcementsSql);
-        $stmt->execute();
-        $announcements = $stmt->fetchAll(PDO::FETCH_OBJ);
+        $announcementModel = $this->model('Announcement');
+        $announcements = $announcementModel->getForUser('parent');
 
         // Get parent's enrollments
         $enrollments = $this->enrollmentModel->getByParent($parentId);
@@ -54,7 +46,7 @@ class ParentController extends Controller
             'has_enrollments' => count($enrollments) > 0
         ];
 
-        $this->view('parent/dashboard_bootstrap', $data);
+        $this->view('parent/dashboard', $data);
     }
 
     /**
@@ -123,5 +115,46 @@ class ParentController extends Controller
         ];
 
         $this->view('parent/children', $data);
+    }
+
+    /**
+     * View learner details
+     */
+    public function viewLearner($learnerId = null)
+    {
+        $this->requireLogin();
+        $this->requireRole('parent');
+
+        if (!$learnerId) {
+            header('Location: ' . URLROOT . '/parent/children');
+            exit;
+        }
+
+        $parentId = $_SESSION['user_id'];
+        
+        // Get learner details
+        $learner = $this->learnerModel->getById($learnerId);
+        
+        // Verify learner belongs to current parent
+        if (!$learner || $learner->parent_id != $parentId) {
+            header('Location: ' . URLROOT . '/parent/children?error=Access denied');
+            exit;
+        }
+
+        // Get enrollment details
+        $enrollmentModel = $this->model('Enrollment');
+        $enrollment = $enrollmentModel->getLatestByLearner($learnerId);
+
+        $data = [
+            'role' => $_SESSION['role'] ?? 'parent',
+            'user_name' => $_SESSION['fullname'] ?? 'User',
+            'current_page' => 'children',
+            'page_title' => 'Learner Details - SignED SPED',
+            'learner' => $learner,
+            'enrollment' => $enrollment,
+            'unread_notifications' => $this->notificationService->getUnreadCount($parentId)
+        ];
+
+        $this->view('parent/viewLearner', $data);
     }
 }

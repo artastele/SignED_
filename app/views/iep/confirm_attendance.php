@@ -1,300 +1,222 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirm Meeting Attendance - SignED SPED</title>
-    <link rel="stylesheet" href="/assets/css/style.css">
-    <style>
-        .meeting-container {
-            max-width: 700px;
-            margin: 0 auto;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .meeting-header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #1E40AF;
-        }
-        
-        .meeting-details {
-            background: #F3F4F6;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-        }
-        
-        .detail-row {
-            display: flex;
-            margin-bottom: 10px;
-        }
-        
-        .detail-label {
-            font-weight: bold;
-            color: #1E40AF;
-            width: 120px;
-            flex-shrink: 0;
-        }
-        
-        .detail-value {
-            flex: 1;
-        }
-        
-        .participants-list {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 15px;
-        }
-        
-        .participant-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .participant-item:last-child {
-            border-bottom: none;
-        }
-        
-        .participant-info {
-            flex: 1;
-        }
-        
-        .participant-name {
-            font-weight: bold;
-        }
-        
-        .participant-role {
-            font-size: 12px;
-            color: #666;
-            text-transform: uppercase;
-        }
-        
-        .status-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        
-        .status-invited {
-            background: #FEF3C7;
-            color: #92400E;
-        }
-        
-        .status-confirmed {
-            background: #D1FAE5;
-            color: #065F46;
-        }
-        
-        .status-declined {
-            background: #FEE2E2;
-            color: #991B1B;
-        }
-        
-        .attendance-form {
-            background: #F9FAFB;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            text-decoration: none;
-            display: inline-block;
-            margin: 0 10px;
-        }
-        
-        .btn-confirm {
-            background: #10B981;
-            color: white;
-        }
-        
-        .btn-confirm:hover {
-            background: #059669;
-        }
-        
-        .btn-decline {
-            background: #EF4444;
-            color: white;
-        }
-        
-        .btn-decline:hover {
-            background: #DC2626;
-        }
-        
-        .btn-secondary {
-            background: #6B7280;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background: #4B5563;
-        }
-        
-        .error {
-            background: #FEE2E2;
-            color: #B91C1C;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        
-        .success {
-            background: #D1FAE5;
-            color: #065F46;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        
-        .already-responded {
-            background: #E0E7FF;
-            color: #3730A3;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>IEP Meeting Attendance</h1>
-            <nav>
-                <a href="/dashboard">Dashboard</a>
-                <a href="/iep/meetings">Meetings</a>
-                <a href="/logout">Logout</a>
-            </nav>
+<?php require_once '../app/views/layouts/header.php'; ?>
+
+<!-- Sidebar -->
+<?php require_once '../app/views/partials/sidebar.php'; ?>
+
+<!-- Main Content -->
+<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+    
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <h1>
+            <i class="bi bi-calendar-check me-2"></i>
+            Confirm Meeting Attendance
+        </h1>
+        <p class="mb-0">IEP Meeting Invitation</p>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <?php if (isset($_GET['success'])): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            <?php echo htmlspecialchars($_GET['success']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
+    <?php endif; ?>
 
-        <div class="meeting-container">
-            <?php if (isset($error)): ?>
-                <div class="error">
-                    <strong>Error:</strong> <?= htmlspecialchars($error) ?>
+    <?php if (isset($data['error'])): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <?php echo htmlspecialchars($data['error']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <!-- Meeting Information -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-info-circle me-2"></i>
+                Meeting Information
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Learner</label>
+                    <input type="text" class="form-control bg-light" value="<?php echo htmlspecialchars($data['participant']->first_name . ' ' . $data['participant']->last_name); ?>" readonly>
                 </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Your Role</label>
+                    <input type="text" class="form-control bg-light" value="<?php echo ucwords(str_replace('_', ' ', $data['participant']->participant_type)); ?>" readonly>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-2">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Meeting Date</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                        <input type="text" class="form-control bg-light" value="<?php echo date('F j, Y', strtotime($data['participant']->meeting_date)); ?>" readonly>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Meeting Time</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-clock"></i></span>
+                        <input type="text" class="form-control bg-light" value="<?php echo date('g:i A', strtotime($data['participant']->meeting_time)); ?>" readonly>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Location</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                        <input type="text" class="form-control bg-light" value="<?php echo htmlspecialchars($data['participant']->location); ?>" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <?php if ($data['participant']->is_required): ?>
+            <div class="alert alert-warning mt-3 mb-0">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <strong>Required Participant:</strong> Your attendance is required for this meeting.
+                <?php if ($data['participant']->participant_type === 'parent'): ?>
+                <br><small>If you cannot attend, the meeting will need to be rescheduled.</small>
+                <?php endif; ?>
+            </div>
             <?php endif; ?>
-
-            <div class="meeting-header">
-                <h2>IEP Meeting Invitation</h2>
-                <p>Learner: <strong><?= htmlspecialchars($meeting->first_name . ' ' . $meeting->last_name) ?></strong></p>
-            </div>
-
-            <div class="meeting-details">
-                <h3 style="margin-top: 0; color: #1E40AF;">Meeting Details</h3>
-                
-                <div class="detail-row">
-                    <div class="detail-label">Date & Time:</div>
-                    <div class="detail-value">
-                        <?= date('l, F j, Y \a\t g:i A', strtotime($meeting->meeting_date)) ?>
-                    </div>
-                </div>
-                
-                <div class="detail-row">
-                    <div class="detail-label">Location:</div>
-                    <div class="detail-value"><?= htmlspecialchars($meeting->location) ?></div>
-                </div>
-                
-                <div class="detail-row">
-                    <div class="detail-label">Scheduled by:</div>
-                    <div class="detail-value"><?= htmlspecialchars($meeting->scheduled_by_name) ?></div>
-                </div>
-                
-                <div class="detail-row">
-                    <div class="detail-label">Status:</div>
-                    <div class="detail-value">
-                        <span class="status-badge status-<?= $meeting->status ?>">
-                            <?= ucfirst($meeting->status) ?>
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="participants-list">
-                <h3 style="margin-top: 0; color: #1E40AF;">Meeting Participants</h3>
-                
-                <?php 
-                $currentUserStatus = null;
-                foreach ($participants as $participant): 
-                    if ($participant->user_id == $_SESSION['user_id']) {
-                        $currentUserStatus = $participant->attendance_status;
-                    }
-                ?>
-                    <div class="participant-item">
-                        <div class="participant-info">
-                            <div class="participant-name">
-                                <?= htmlspecialchars($participant->fullname) ?>
-                                <?php if ($participant->user_id == $_SESSION['user_id']): ?>
-                                    <em>(You)</em>
-                                <?php endif; ?>
-                            </div>
-                            <div class="participant-role"><?= htmlspecialchars($participant->role) ?></div>
-                        </div>
-                        <div class="status-badge status-<?= $participant->attendance_status ?>">
-                            <?= ucfirst($participant->attendance_status) ?>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-
-            <?php if ($currentUserStatus === 'confirmed' || $currentUserStatus === 'declined'): ?>
-                <div class="already-responded">
-                    <h3>Response Recorded</h3>
-                    <p>You have already <?= $currentUserStatus ?> attendance for this meeting.</p>
-                    <?php if ($currentUserStatus === 'confirmed'): ?>
-                        <p>Thank you for confirming your attendance. We look forward to seeing you at the meeting.</p>
-                    <?php else: ?>
-                        <p>If you need to change your response, please contact the meeting organizer.</p>
-                    <?php endif; ?>
-                </div>
-            <?php else: ?>
-                <div class="attendance-form">
-                    <h3>Please Confirm Your Attendance</h3>
-                    <p>Will you be able to attend this IEP meeting?</p>
-                    
-                    <form method="POST" style="margin-top: 20px;">
-                        <button type="submit" name="status" value="confirmed" class="btn btn-confirm">
-                            ✓ I will attend
-                        </button>
-                        <button type="submit" name="status" value="declined" class="btn btn-decline">
-                            ✗ I cannot attend
-                        </button>
-                    </form>
-                </div>
-            <?php endif; ?>
-
-            <div style="text-align: center; margin-top: 30px;">
-                <a href="/dashboard" class="btn btn-secondary">Return to Dashboard</a>
-            </div>
         </div>
     </div>
 
-    <script>
-        // Confirm before declining
-        document.addEventListener('DOMContentLoaded', function() {
-            const declineBtn = document.querySelector('button[value="declined"]');
-            if (declineBtn) {
-                declineBtn.addEventListener('click', function(e) {
-                    if (!confirm('Are you sure you cannot attend this meeting? This will notify the organizer.')) {
-                        e.preventDefault();
-                    }
-                });
-            }
-        });
-    </script>
-</body>
-</html>
+    <!-- Current Status -->
+    <div class="card mb-4">
+        <div class="card-header bg-<?php 
+            echo $data['participant']->invitation_status === 'confirmed' ? 'success' : 
+                ($data['participant']->invitation_status === 'declined' ? 'danger' : 'warning'); 
+        ?> text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-<?php 
+                    echo $data['participant']->invitation_status === 'confirmed' ? 'check-circle' : 
+                        ($data['participant']->invitation_status === 'declined' ? 'x-circle' : 'hourglass-split'); 
+                ?> me-2"></i>
+                Current Status: <?php echo ucfirst($data['participant']->invitation_status); ?>
+            </h5>
+        </div>
+        <div class="card-body">
+            <?php if ($data['participant']->invitation_status === 'confirmed'): ?>
+                <p class="mb-0">
+                    <i class="bi bi-check-circle text-success me-2"></i>
+                    You have confirmed your attendance. Thank you!
+                </p>
+                <?php if ($data['participant']->confirmed_at): ?>
+                <small class="text-muted">
+                    Confirmed on <?php echo date('M j, Y g:i A', strtotime($data['participant']->confirmed_at)); ?>
+                </small>
+                <?php endif; ?>
+            <?php elseif ($data['participant']->invitation_status === 'declined'): ?>
+                <p class="mb-2">
+                    <i class="bi bi-x-circle text-danger me-2"></i>
+                    You have declined this invitation.
+                </p>
+                <?php if ($data['participant']->decline_reason): ?>
+                <p class="mb-0"><strong>Reason:</strong> <?php echo htmlspecialchars($data['participant']->decline_reason); ?></p>
+                <?php endif; ?>
+            <?php else: ?>
+                <p class="mb-0">
+                    <i class="bi bi-hourglass-split text-warning me-2"></i>
+                    Your response is pending. Please confirm or decline below.
+                </p>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- Confirmation Form -->
+    <?php if ($data['participant']->invitation_status === 'pending'): ?>
+    <div class="row g-3">
+        <!-- Confirm -->
+        <div class="col-md-6">
+            <form method="POST" action="<?php echo URLROOT; ?>/iep/confirmAttendance?participant_id=<?php echo $data['participant']->id; ?>">
+                <input type="hidden" name="action" value="confirm">
+                <div class="card h-100 border-success">
+                    <div class="card-body text-center">
+                        <i class="bi bi-check-circle fs-1 text-success mb-3"></i>
+                        <h5 class="card-title">Confirm Attendance</h5>
+                        <p class="card-text">I will attend this meeting</p>
+                        <button type="submit" class="btn btn-success btn-lg w-100">
+                            <i class="bi bi-check-circle me-2"></i> Confirm
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Decline -->
+        <div class="col-md-6">
+            <div class="card h-100 border-danger">
+                <div class="card-body text-center">
+                    <i class="bi bi-x-circle fs-1 text-danger mb-3"></i>
+                    <h5 class="card-title">Decline Invitation</h5>
+                    <p class="card-text">I cannot attend this meeting</p>
+                    <button type="button" class="btn btn-danger btn-lg w-100" data-bs-toggle="modal" data-bs-target="#declineModal">
+                        <i class="bi bi-x-circle me-2"></i> Decline
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php else: ?>
+    <!-- Back Button -->
+    <div class="card">
+        <div class="card-body">
+            <a href="<?php echo URLROOT; ?>/<?php echo $data['role']; ?>/dashboard" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+    <?php endif; ?>
+
+</main>
+
+<!-- Decline Modal -->
+<div class="modal fade" id="declineModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="<?php echo URLROOT; ?>/iep/confirmAttendance?participant_id=<?php echo $data['participant']->id; ?>">
+                <input type="hidden" name="action" value="decline">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-x-circle me-2"></i>
+                        Decline Meeting Invitation
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <?php if ($data['participant']->participant_type === 'parent'): ?>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Important:</strong> As a parent/guardian, your attendance is required. 
+                        If you decline, the meeting will need to be rescheduled.
+                    </div>
+                    <?php endif; ?>
+
+                    <div class="mb-3">
+                        <label for="decline_reason" class="form-label fw-bold">
+                            Reason for Declining <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control" id="decline_reason" name="decline_reason" rows="4" required 
+                                  placeholder="Please provide a reason for declining this invitation..."></textarea>
+                        <small class="text-muted">This will help us reschedule the meeting</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-x-circle me-1"></i> Decline Invitation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<?php require_once '../app/views/layouts/footer.php'; ?>

@@ -87,7 +87,7 @@
                             </div>
 
                             <div class="d-grid gap-2">
-                                <a href="<?php echo URLROOT; ?>/learner/view/<?php echo $learner->id; ?>" 
+                                <a href="<?php echo URLROOT; ?>/parent/viewLearner/<?php echo $learner->id; ?>" 
                                    class="btn btn-outline-primary btn-sm">
                                     <i class="bi bi-eye me-1"></i>View Details
                                 </a>

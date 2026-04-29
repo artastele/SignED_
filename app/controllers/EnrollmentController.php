@@ -73,46 +73,96 @@ class EnrollmentController extends Controller
                 'last_name' => trim($_POST['last_name'] ?? ''),
                 'suffix' => trim($_POST['extension_name'] ?? ''),
                 'date_of_birth' => $_POST['date_of_birth'] ?? null,
+                'age' => $_POST['age'] ?? null,
                 'gender' => $_POST['gender'] ?? null,
                 'place_of_birth' => trim($_POST['place_of_birth'] ?? ''),
-                'nationality' => trim($_POST['nationality'] ?? 'Filipino'),
-                'religion' => trim($_POST['religion'] ?? ''),
                 'mother_tongue' => trim($_POST['mother_tongue'] ?? ''),
-                'indigenous_people' => trim($_POST['indigenous_people'] ?? ''),
-                'is_4ps_beneficiary' => isset($_POST['is_4ps']) ? 1 : 0,
-                'grade_level' => $_POST['grade_level'] ?? null
+                'psa_birth_cert' => trim($_POST['psa_birth_cert'] ?? ''),
+                'lrn' => trim($_POST['lrn'] ?? ''),
+                'is_indigenous' => $_POST['is_indigenous'] ?? 'No',
+                'indigenous_specify' => trim($_POST['indigenous_specify'] ?? ''),
+                'is_4ps' => $_POST['is_4ps'] ?? 'No',
+                '4ps_household_id' => trim($_POST['4ps_household_id'] ?? ''),
+                'is_disabled' => $_POST['is_disabled'] ?? 'No',
+                'disability_types' => isset($_POST['disability']) ? implode(', ', $_POST['disability']) : '',
+                'grade_level' => $_POST['grade_level'] ?? null,
+                'school_year' => $_POST['school_year'] ?? ''
+            ];
+
+            // Collect address data
+            $addressData = [
+                'current_house_no' => trim($_POST['current_house_no'] ?? ''),
+                'current_street' => trim($_POST['current_street'] ?? ''),
+                'current_barangay' => trim($_POST['current_barangay'] ?? ''),
+                'current_city' => trim($_POST['current_city'] ?? ''),
+                'current_province' => trim($_POST['current_province'] ?? ''),
+                'current_country' => trim($_POST['current_country'] ?? 'Philippines'),
+                'current_zip_code' => trim($_POST['current_zip_code'] ?? ''),
+                'same_address' => $_POST['same_address_option'] ?? 'no',
+                'permanent_house_no' => trim($_POST['permanent_house_no'] ?? ''),
+                'permanent_street' => trim($_POST['permanent_street'] ?? ''),
+                'permanent_barangay' => trim($_POST['permanent_barangay'] ?? ''),
+                'permanent_city' => trim($_POST['permanent_city'] ?? ''),
+                'permanent_province' => trim($_POST['permanent_province'] ?? ''),
+                'permanent_country' => trim($_POST['permanent_country'] ?? 'Philippines'),
+                'permanent_zip_code' => trim($_POST['permanent_zip_code'] ?? '')
             ];
 
             // Collect parent/guardian data
             $parentData = [
-                'father_name' => trim(($_POST['father_first_name'] ?? '') . ' ' . 
-                                     ($_POST['father_middle_name'] ?? '') . ' ' . 
-                                     ($_POST['father_last_name'] ?? '')),
-                'father_occupation' => trim($_POST['father_occupation'] ?? ''),
+                'father_last_name' => trim($_POST['father_last_name'] ?? ''),
+                'father_first_name' => trim($_POST['father_first_name'] ?? ''),
+                'father_middle_name' => trim($_POST['father_middle_name'] ?? ''),
                 'father_contact' => trim($_POST['father_contact'] ?? ''),
-                'mother_name' => trim(($_POST['mother_first_name'] ?? '') . ' ' . 
-                                     ($_POST['mother_middle_name'] ?? '') . ' ' . 
-                                     ($_POST['mother_last_name'] ?? '')),
-                'mother_occupation' => trim($_POST['mother_occupation'] ?? ''),
+                'mother_last_name' => trim($_POST['mother_last_name'] ?? ''),
+                'mother_first_name' => trim($_POST['mother_first_name'] ?? ''),
+                'mother_middle_name' => trim($_POST['mother_middle_name'] ?? ''),
                 'mother_contact' => trim($_POST['mother_contact'] ?? ''),
-                'guardian_name' => trim($_POST['guardian_name'] ?? ''),
-                'guardian_relationship' => trim($_POST['guardian_relationship'] ?? ''),
-                'guardian_contact' => trim($_POST['guardian_contact'] ?? ''),
-                'home_address' => trim($_POST['current_house_no'] ?? '') . ' ' . 
-                                 trim($_POST['current_street'] ?? '') . ', ' .
-                                 trim($_POST['current_barangay'] ?? '') . ', ' .
-                                 trim($_POST['current_city'] ?? '') . ', ' .
-                                 trim($_POST['current_province'] ?? ''),
-                'contact_number' => trim($_POST['mother_contact'] ?? $_POST['father_contact'] ?? $_POST['guardian_contact'] ?? '')
+                'guardian_last_name' => trim($_POST['guardian_last_name'] ?? ''),
+                'guardian_first_name' => trim($_POST['guardian_first_name'] ?? ''),
+                'guardian_middle_name' => trim($_POST['guardian_middle_name'] ?? ''),
+                'guardian_contact' => trim($_POST['guardian_contact'] ?? '')
             ];
 
-            // Store complete BEEF data as JSON
-            $beefData = array_merge($learnerData, $parentData, [
-                'school_year' => $_POST['school_year'] ?? '',
+            // Collect student type specific data
+            $studentTypeData = [
                 'student_type' => $_POST['student_type'] ?? 'new',
-                'psa_birth_cert' => $_POST['psa_birth_cert'] ?? '',
-                'lrn' => $_POST['lrn'] ?? ''
-            ]);
+                'last_grade_completed' => trim($_POST['last_grade_completed'] ?? ''),
+                'last_school_year' => trim($_POST['last_school_year'] ?? ''),
+                'last_school_attended' => trim($_POST['last_school_attended'] ?? ''),
+                'last_school_id' => trim($_POST['last_school_id'] ?? '')
+            ];
+
+            // Collect SHS data (if applicable)
+            $shsData = [
+                'semester' => trim($_POST['semester'] ?? ''),
+                'track' => trim($_POST['track'] ?? ''),
+                'strand' => trim($_POST['strand'] ?? '')
+            ];
+
+            // Collect learning modalities
+            $learningModalities = isset($_POST['learning_modality']) ? implode(', ', $_POST['learning_modality']) : '';
+
+            // Store complete BEEF data as JSON
+            $beefData = array_merge(
+                $learnerData,
+                $addressData,
+                $parentData,
+                $studentTypeData,
+                $shsData,
+                ['learning_modalities' => $learningModalities]
+            );
+
+            // Build home address string
+            $homeAddress = trim($addressData['current_house_no'] . ' ' . 
+                               $addressData['current_street']) . ', ' .
+                           $addressData['current_barangay'] . ', ' .
+                           $addressData['current_city'] . ', ' .
+                           $addressData['current_province'];
+
+            // Get primary contact number
+            $contactNumber = $parentData['mother_contact'] ?: 
+                           ($parentData['father_contact'] ?: $parentData['guardian_contact']);
 
             // Create enrollment record
             $enrollmentData = [
@@ -122,10 +172,10 @@ class EnrollmentController extends Controller
                 'learner_dob' => $learnerData['date_of_birth'],
                 'learner_grade' => $learnerData['grade_level'],
                 'beef_data' => json_encode($beefData),
-                'is_returning_student' => ($_POST['student_type'] ?? 'new') === 'old' ? 1 : 0,
-                'previous_lrn' => $_POST['lrn'] ?? null,
-                'parent_contact_number' => $parentData['contact_number'],
-                'parent_address' => $parentData['home_address']
+                'is_returning_student' => ($studentTypeData['student_type'] === 'old') ? 1 : 0,
+                'previous_lrn' => $learnerData['lrn'],
+                'parent_contact_number' => $contactNumber,
+                'parent_address' => $homeAddress
             ];
 
             $enrollmentId = $this->enrollmentModel->createWithBeef($enrollmentData);
@@ -141,7 +191,7 @@ class EnrollmentController extends Controller
                 $enrollmentId,
                 null,
                 'pending_documents',
-                'BEEF form submitted'
+                'BEEF form submitted - ' . $studentTypeData['student_type'] . ' student'
             );
 
             // Redirect to document upload page
@@ -259,11 +309,11 @@ class EnrollmentController extends Controller
         }
         
         try {
-            // Validate document type
+            // Validate document type (BEEF is already submitted, not uploadable here)
             $documentType = $_POST['document_type'] ?? '';
-            $allowedTypes = ['psa', 'pwd_id', 'medical_record', 'beef'];
+            $allowedTypes = ['psa', 'pwd_id', 'medical_record'];
             if (!in_array($documentType, $allowedTypes)) {
-                throw new Exception("Invalid document type. Allowed types: " . implode(', ', $allowedTypes));
+                throw new Exception("Invalid document type. Allowed types: PSA Birth Certificate, PWD ID, Medical Records");
             }
 
             // Validate file upload with comprehensive security checks
@@ -312,7 +362,7 @@ class EnrollmentController extends Controller
                 ['document_type' => $documentType, 'enrollment_id' => $enrollmentId]
             );
 
-            // Check if all documents are uploaded
+            // Check if all required documents are uploaded (only PSA is required)
             if ($this->enrollmentModel->hasAllDocuments($enrollmentId)) {
                 // Update enrollment status to pending verification
                 $this->enrollmentModel->updateStatus($enrollmentId, 'pending_verification');
@@ -324,12 +374,12 @@ class EnrollmentController extends Controller
                     $enrollmentId,
                     'pending_documents',
                     'pending_verification',
-                    'All required documents uploaded'
+                    'Required document (PSA Birth Certificate) uploaded'
                 );
 
-                $message = "Document uploaded successfully! All required documents have been submitted. Your enrollment is now pending verification.";
+                $message = "Document uploaded successfully! The required PSA Birth Certificate has been submitted. Your enrollment is now pending verification.";
             } else {
-                $message = "Document uploaded successfully! Please upload the remaining required documents.";
+                $message = "Document uploaded successfully! Please upload the PSA Birth Certificate to proceed with verification.";
             }
 
             $this->showUploadForm($enrollmentId, ['success' => $message]);
@@ -358,6 +408,10 @@ class EnrollmentController extends Controller
             $uploadedTypes[$doc->document_type] = $doc;
         }
 
+        // Get current user info for sidebar
+        $userModel = $this->model('User');
+        $currentUser = $userModel->getUserById($this->getCurrentUserId());
+        
         $data['enrollment'] = $enrollment;
         $data['documents'] = $documents;
         $data['uploaded_types'] = $uploadedTypes;
@@ -367,6 +421,11 @@ class EnrollmentController extends Controller
             'medical_record' => 'Medical Records',
             'beef' => 'Basic Education Enrollment Form (BEEF)'
         ];
+        
+        // Add sidebar data
+        $data['role'] = $this->getCurrentUserRole();
+        $data['user_name'] = $currentUser->fullname ?? ($currentUser->first_name . ' ' . $currentUser->last_name);
+        $data['current_page'] = 'upload';
 
         $this->view('enrollment/upload', $data);
     }
@@ -378,8 +437,15 @@ class EnrollmentController extends Controller
     {
         $this->requireSpedStaff();
 
-        // Get enrollments pending verification
-        $pendingEnrollments = $this->enrollmentModel->getByStatus('pending_verification');
+        // Get status filter from query parameter
+        $statusFilter = $_GET['status'] ?? 'pending_verification';
+        
+        // Get enrollments based on status filter
+        $enrollments = $this->enrollmentModel->getByStatus($statusFilter);
+        
+        // Get approved count for the card
+        $approvedEnrollments = $this->enrollmentModel->getByStatus('approved');
+        $approvedCount = count($approvedEnrollments);
 
         // Get current user role for sidebar
         $role = $this->getCurrentUserRole();
@@ -390,43 +456,17 @@ class EnrollmentController extends Controller
         $meetingModel = $this->model('IepMeeting');
         
         $data = [
-            'enrollments' => $pendingEnrollments,
+            'enrollments' => $enrollments,
+            'approved_count' => $approvedCount,
             'role' => $role,
             'current_page' => 'verify',
-            'pending_verifications_count' => count($pendingEnrollments),
+            'pending_verifications_count' => count($this->enrollmentModel->getByStatus('pending_verification')),
             'pending_assessments_count' => count($learnerModel->getByStatus('assessment_pending')),
             'upcoming_meetings_count' => count($meetingModel->getUpcoming()),
             'pending_approvals_count' => count($iepModel->getByStatus('pending_approval'))
         ];
 
         $this->view('enrollment/verify', $data);
-    }
-
-    /**
-     * View enrollment details for verification
-     */
-    public function viewEnrollment()
-    {
-        $this->requireSpedStaff();
-
-        $enrollmentId = $_GET['id'] ?? null;
-        if (!$enrollmentId) {
-            die('Enrollment ID required');
-        }
-
-        $enrollment = $this->enrollmentModel->getById($enrollmentId);
-        if (!$enrollment) {
-            die('Enrollment not found');
-        }
-
-        $documents = $this->enrollmentModel->getDocuments($enrollmentId);
-
-        $data = [
-            'enrollment' => $enrollment,
-            'documents' => $documents
-        ];
-
-        parent::view('enrollment/view', $data);
     }
 
     /**
@@ -452,6 +492,39 @@ class EnrollmentController extends Controller
         header('Content-Type: ' . $result['mime_type']);
         header('Content-Disposition: attachment; filename="' . $result['filename'] . '"');
         header('Content-Length: ' . strlen($result['content']));
+
+        // Output the document content
+        echo $result['content'];
+        exit;
+    }
+
+    /**
+     * View enrollment document inline (opens in new tab)
+     */
+    public function viewDocument()
+    {
+        $this->requireSpedStaff();
+
+        $documentId = $_GET['doc_id'] ?? null;
+        if (!$documentId) {
+            die('Document ID required');
+        }
+
+        // Retrieve document from DocumentStore
+        $result = $this->documentStore->retrieve($documentId, $this->getCurrentUserId(), true);
+
+        if (!$result['success']) {
+            die('Error retrieving document: ' . $result['error']);
+        }
+
+        // Set appropriate headers for inline viewing
+        header('Content-Type: ' . $result['mime_type']);
+        header('Content-Disposition: inline; filename="' . $result['filename'] . '"');
+        header('Content-Length: ' . strlen($result['content']));
+        
+        // Security headers for PDF viewing
+        header('X-Content-Type-Options: nosniff');
+        header('X-Frame-Options: SAMEORIGIN');
 
         // Output the document content
         echo $result['content'];
@@ -492,14 +565,40 @@ class EnrollmentController extends Controller
                 throw new Exception("Failed to update enrollment status");
             }
 
-            // Create learner record
-            $learnerModel = $this->model('Learner');
+            // Extract learner data from BEEF JSON
+            $beefData = json_decode($enrollment->beef_data, true);
+            
+            // Check if this is a returning student
+            $isReturningStudent = ($enrollment->is_returning_student == 1);
+            $previousLearnerId = null;
+            $previousAssessmentId = null;
+            
+            if ($isReturningStudent && !empty($enrollment->previous_lrn)) {
+                // Find previous learner record by LRN
+                $previousLearner = $learnerModel->getByLRN($enrollment->previous_lrn);
+                if ($previousLearner) {
+                    $previousLearnerId = $previousLearner->id;
+                    
+                    // Get previous assessment
+                    $assessmentModel = new Assessment();
+                    $previousAssessment = $assessmentModel->getByLearnerId($previousLearnerId);
+                    if ($previousAssessment) {
+                        $previousAssessmentId = $previousAssessment->id;
+                    }
+                }
+            }
+            
+            // Create learner record with complete data from BEEF form
             $learnerData = [
                 'parent_id' => $enrollment->parent_id,
-                'first_name' => $enrollment->learner_first_name,
-                'last_name' => $enrollment->learner_last_name,
-                'date_of_birth' => $enrollment->learner_dob,
-                'grade_level' => $enrollment->learner_grade,
+                'previous_learner_id' => $previousLearnerId, // Link to old record
+                'first_name' => $beefData['first_name'] ?? $enrollment->learner_first_name,
+                'middle_name' => $beefData['middle_name'] ?? null,
+                'last_name' => $beefData['last_name'] ?? $enrollment->learner_last_name,
+                'suffix' => $beefData['suffix'] ?? null,
+                'date_of_birth' => $beefData['date_of_birth'] ?? $enrollment->learner_dob,
+                'grade_level' => $beefData['grade_level'] ?? $enrollment->learner_grade,
+                'school_year' => $beefData['school_year'] ?? date('Y') . '-' . (date('Y') + 1),
                 'status' => 'enrolled'
             ];
 
@@ -509,20 +608,69 @@ class EnrollmentController extends Controller
                 throw new Exception("Failed to create learner record");
             }
 
+            // ============================================
+            // AUTO-GENERATE LRN AND LEARNER ACCOUNT
+            // ============================================
+            
+            try {
+                // Generate unique 12-digit LRN
+                $lrn = $learnerModel->generateLRN();
+                
+                // Create learner account with LRN as username
+                $userId = $learnerModel->createLearnerAccount($learnerId, $lrn);
+                
+                if (!$userId) {
+                    throw new Exception("Failed to create learner account");
+                }
+                
+                // Log LRN generation
+                $learnerModel->logLRNGeneration($lrn, $learnerId, $enrollmentId, $verifiedBy);
+                
+                // Update enrollment to mark LRN as generated
+                $this->enrollmentModel->markLRNGenerated($enrollmentId);
+                
+                // Get learner full name for email
+                $learnerFullName = trim(
+                    $learnerData['first_name'] . ' ' . 
+                    ($learnerData['middle_name'] ?? '') . ' ' . 
+                    $learnerData['last_name'] . ' ' . 
+                    ($learnerData['suffix'] ?? '')
+                );
+                
+                // Send approval email with LRN and credentials
+                $this->sendApprovalWithCredentials(
+                    $enrollment,
+                    $learnerFullName,
+                    $lrn,
+                    'default123' // Default password
+                );
+                
+            } catch (Exception $e) {
+                // Log error but don't fail the approval
+                $this->auditLog->logError(
+                    'lrn_generation',
+                    'high',
+                    'LRN generation failed: ' . $e->getMessage(),
+                    $learnerId,
+                    ['enrollment_id' => $enrollmentId],
+                    $verifiedBy
+                );
+                
+                // Still send regular approval email
+                $this->sendApprovalEmail($enrollment, true);
+            }
+
             // Log approval action
             $this->auditLog->logApprovalAction(
                 $verifiedBy,
                 'enrollment',
                 $enrollmentId,
                 'approve',
-                'Enrollment approved and learner record created'
+                'Enrollment approved, learner record created (ID: ' . $learnerId . '), LRN generated: ' . ($lrn ?? 'N/A')
             );
 
-            // Send approval email notification
-            $this->sendApprovalEmail($enrollment, true);
-
             // Redirect back to verification page with success message
-            header('Location: ' . URLROOT . '/enrollment/verify?success=Enrollment approved successfully');
+            header('Location: ' . URLROOT . '/enrollment/verify?success=Enrollment approved successfully. LRN generated: ' . ($lrn ?? 'N/A'));
             exit;
 
         } catch (Exception $e) {
@@ -626,6 +774,83 @@ class EnrollmentController extends Controller
     }
 
     /**
+     * Send approval email with LRN and learner credentials
+     */
+    private function sendApprovalWithCredentials($enrollment, $learnerName, $lrn, $defaultPassword)
+    {
+        try {
+            $parentName = $enrollment->parent_name ?? 'Parent/Guardian';
+            $gradeLevel = $enrollment->learner_grade ?? 'N/A';
+            
+            $subject = 'Enrollment Approved - Learner Account Created';
+            
+            $body = "
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                <div style='background: linear-gradient(135deg, #a01422 0%, #1e4072 100%); padding: 20px; text-align: center;'>
+                    <h2 style='color: white; margin: 0;'>SignED SPED System</h2>
+                </div>
+                
+                <div style='padding: 30px; background-color: #f9f9f9;'>
+                    <h3 style='color: #a01422;'>Enrollment Approved!</h3>
+                    
+                    <p>Dear {$parentName},</p>
+                    
+                    <p>Good news! Your child's enrollment has been approved.</p>
+                    
+                    <div style='background-color: white; padding: 20px; border-left: 4px solid #a01422; margin: 20px 0;'>
+                        <p style='margin: 5px 0;'><strong>Student:</strong> {$learnerName}</p>
+                        <p style='margin: 5px 0;'><strong>Grade:</strong> {$gradeLevel}</p>
+                        <p style='margin: 5px 0;'><strong>Status:</strong> <span style='color: #28a745;'>Enrolled</span></p>
+                    </div>
+                    
+                    <h4 style='color: #1e4072; margin-top: 30px;'>LEARNER ACCOUNT CREDENTIALS:</h4>
+                    
+                    <div style='background-color: #fff3cd; padding: 20px; border-radius: 5px; margin: 20px 0;'>
+                        <p style='margin: 10px 0;'><strong>Username (LRN):</strong> <span style='font-size: 18px; color: #a01422;'>{$lrn}</span></p>
+                        <p style='margin: 10px 0;'><strong>Password:</strong> <span style='font-size: 18px; color: #a01422;'>{$defaultPassword}</span></p>
+                    </div>
+                    
+                    <p>Your child can now login to the SignED SPED System using these credentials.</p>
+                    
+                    <div style='background-color: #d1ecf1; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                        <p style='margin: 0;'><strong>IMPORTANT:</strong> Please change the password after first login for security.</p>
+                    </div>
+                    
+                    <p style='text-align: center; margin: 30px 0;'>
+                        <a href='" . URLROOT . "/auth/login' style='background-color: #a01422; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;'>Login Now</a>
+                    </p>
+                    
+                    <p style='margin-top: 30px;'>Thank you,<br><strong>SignED SPED System</strong></p>
+                </div>
+                
+                <div style='background-color: #333; color: white; padding: 15px; text-align: center; font-size: 12px;'>
+                    <p style='margin: 0;'>This is an automated message. Please do not reply to this email.</p>
+                </div>
+            </div>
+            ";
+            
+            // Send email
+            $emailSent = $this->mailer->sendEmail(
+                $enrollment->parent_email,
+                $subject,
+                $body
+            );
+
+            // Log email attempt
+            $this->auditLog->logEmailSent(
+                $this->getCurrentUserId(),
+                $enrollment->parent_email,
+                $subject,
+                'enrollment_approval_with_credentials',
+                $emailSent
+            );
+
+        } catch (Exception $e) {
+            $this->auditLog->logError('email', 'medium', 'Failed to send approval email with credentials: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Send rejection email notification
      */
     private function sendRejectionEmail($enrollment, $reason)
@@ -674,7 +899,7 @@ class EnrollmentController extends Controller
 
     /**
      * LRN Lookup API for Old Students
-     * Returns learner data based on LRN for auto-filling BEEF form
+     * Returns learner data based on LRN or Full Name for auto-filling BEEF form
      */
     public function lookupLRN()
     {
@@ -688,25 +913,43 @@ class EnrollmentController extends Controller
         }
 
         try {
-            $lrn = trim($_POST['lrn'] ?? '');
+            $searchInput = trim($_POST['lrn'] ?? '');
 
-            // Validate LRN format (12 digits)
-            if (empty($lrn) || strlen($lrn) !== 12 || !ctype_digit($lrn)) {
-                throw new Exception("Invalid LRN format. LRN must be exactly 12 digits.");
+            if (empty($searchInput)) {
+                throw new Exception("Please enter an LRN or full name to search.");
             }
 
-            // Look up learner by LRN
             $learnerModel = $this->model('Learner');
-            $learner = $learnerModel->getByLRN($lrn);
+            $parentId = $this->getCurrentUserId();
+            $learner = null;
+
+            // Check if input is LRN (12 digits) or name
+            if (strlen($searchInput) === 12 && ctype_digit($searchInput)) {
+                // Search by LRN
+                $learner = $learnerModel->getByLRN($searchInput);
+                
+                if ($learner && $learner->parent_id != $parentId) {
+                    throw new Exception("This learner does not belong to your account.");
+                }
+            } else {
+                // Search by full name
+                $learners = $learnerModel->searchByName($searchInput, $parentId);
+                
+                if (empty($learners)) {
+                    throw new Exception("No learner found with name: " . $searchInput);
+                } elseif (count($learners) > 1) {
+                    // Multiple matches found
+                    $names = array_map(function($l) {
+                        return $l->first_name . ' ' . $l->last_name . ' (LRN: ' . $l->lrn . ')';
+                    }, $learners);
+                    throw new Exception("Multiple learners found. Please use LRN to search: " . implode(', ', $names));
+                } else {
+                    $learner = $learners[0];
+                }
+            }
 
             if (!$learner) {
-                throw new Exception("No learner found with LRN: " . $lrn);
-            }
-
-            // Check if learner belongs to current parent
-            $parentId = $this->getCurrentUserId();
-            if ($learner->parent_id != $parentId) {
-                throw new Exception("This learner does not belong to your account.");
+                throw new Exception("No learner found with the provided information.");
             }
 
             // Get previous enrollment data if exists
@@ -717,10 +960,11 @@ class EnrollmentController extends Controller
                 'success' => true,
                 'learner' => [
                     'lrn' => $learner->lrn,
+                    'psa_birth_cert' => $learner->psa_birth_cert ?? '',
                     'first_name' => $learner->first_name,
                     'last_name' => $learner->last_name,
                     'middle_name' => $learner->middle_name ?? '',
-                    'extension_name' => $learner->extension_name ?? '',
+                    'extension_name' => $learner->suffix ?? '',
                     'date_of_birth' => $learner->date_of_birth,
                     'gender' => $learner->gender ?? '',
                     'place_of_birth' => $learner->place_of_birth ?? '',
@@ -742,9 +986,8 @@ class EnrollmentController extends Controller
             $this->auditLog->logAction(
                 $parentId,
                 'lrn_lookup',
-                'learner',
-                $learner->id,
-                ['lrn' => $lrn]
+                'LRN/Name lookup successful',
+                'Search: ' . $searchInput . ', Found: ' . $learner->lrn
             );
 
             header('Content-Type: application/json');
@@ -759,5 +1002,88 @@ class EnrollmentController extends Controller
             ]);
             exit;
         }
+    }
+
+    /**
+     * View enrollment details (for SPED staff)
+     */
+    public function viewDetails()
+    {
+        $this->requireSpedStaff();
+
+        $enrollmentId = $_GET['id'] ?? null;
+        if (!$enrollmentId) {
+            die('Enrollment ID required');
+        }
+
+        // Get enrollment details
+        $enrollment = $this->enrollmentModel->getById($enrollmentId);
+        if (!$enrollment) {
+            die('Enrollment not found');
+        }
+
+        // Get documents
+        $documents = $this->enrollmentModel->getDocuments($enrollmentId);
+
+        // Get current user info for sidebar
+        $userModel = $this->model('User');
+        $currentUser = $userModel->getUserById($this->getCurrentUserId());
+        
+        $data = [
+            'enrollment' => $enrollment,
+            'documents' => $documents,
+            'role' => $this->getCurrentUserRole(),
+            'user_name' => $currentUser->fullname ?? ($currentUser->first_name . ' ' . $currentUser->last_name),
+            'current_page' => 'verify'
+        ];
+
+        $this->view('enrollment/view', $data);
+    }
+
+    /**
+     * View enrollment for verification (alias for viewDetails)
+     */
+    public function viewEnrollment()
+    {
+        $this->viewDetails();
+    }
+
+    /**
+     * View BEEF Form data (read-only)
+     */
+    public function viewBeef()
+    {
+        $this->requireSpedStaff();
+
+        $enrollmentId = $_GET['id'] ?? null;
+        if (!$enrollmentId) {
+            die('Enrollment ID required');
+        }
+
+        // Get enrollment details
+        $enrollment = $this->enrollmentModel->getById($enrollmentId);
+        if (!$enrollment) {
+            die('Enrollment not found');
+        }
+
+        // Decode BEEF data
+        $beefData = json_decode($enrollment->beef_data, true);
+        if (!$beefData) {
+            die('BEEF form data not found');
+        }
+
+        // Get current user info for sidebar
+        $userModel = $this->model('User');
+        $currentUser = $userModel->getUserById($this->getCurrentUserId());
+        
+        $data = [
+            'enrollment' => $enrollment,
+            'beef_data' => $beefData,
+            'role' => $this->getCurrentUserRole(),
+            'user_name' => $currentUser->fullname ?? ($currentUser->first_name . ' ' . $currentUser->last_name),
+            'current_page' => 'verify'
+        ];
+
+        $this->view('enrollment/viewBeef', $data);
     }
 }

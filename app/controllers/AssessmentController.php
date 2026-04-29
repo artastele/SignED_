@@ -1,256 +1,483 @@
 <?php
 
-require_once '../app/traits/SecurityValidation.php';
-
 class AssessmentController extends Controller
 {
-    use SecurityValidation;
-    
     private $assessmentModel;
     private $learnerModel;
     private $auditLog;
-    private $documentStore;
 
     public function __construct()
     {
-        parent::__construct();
         $this->assessmentModel = $this->model('Assessment');
         $this->learnerModel = $this->model('Learner');
         $this->auditLog = $this->model('AuditLog');
-        $this->documentStore = $this->model('DocumentStore');
-        $this->initializeSecurity();
     }
 
     /**
-     * Display learners with enrollment status "Verified" ready for assessment
-     * Requirements: 5.1
+     * Parent assessment form page
      */
-    public function list()
+    public function index()
     {
-        $this->requireSpedRole(['sped_teacher', 'admin']);
+        $this->requireParent();
 
-        // Get learners ready for assessment (status: enrolled)
-        $learners = $this->learnerModel->getReadyForAssessment();
+        $parentId = $this->getCurrentUserId();
+        
+        // Get learners for this parent
+        $learners = $this->learnerModel->getByParent($parentId);
+        
+        // Get assessments for each learner
+        $assessments = [];
+        foreach ($learners as $learner) {
+            $assessment = $this->assessmentModel->getByLearnerId($learner->id);
+            if ($assessment) {
+                $assessments[] = $assessment;
+            }
+        }
 
-        // Get current user role for sidebar
-        $role = $this->getCurrentUserRole();
-        
-        // Get badge counts for sidebar
-        $enrollmentModel = $this->model('Enrollment');
-        $iepModel = $this->model('Iep');
-        $meetingModel = $this->model('IepMeeting');
-        
         $data = [
             'learners' => $learners,
-            'page_title' => 'Learners Ready for Assessment',
-            'role' => $role,
-            'current_page' => 'assessments',
-            'pending_verifications_count' => count($enrollmentModel->getByStatus('pending_verification')),
-            'pending_assessments_count' => count($learners),
-            'upcoming_meetings_count' => count($meetingModel->getUpcoming()),
-            'pending_approvals_count' => count($iepModel->getByStatus('pending_approval'))
+            'assessments' => $assessments,
+            'role' => $_SESSION['role'] ?? 'parent',
+            'user_name' => $_SESSION['fullname'] ?? 'Parent',
+            'current_page' => 'assessment'
         ];
 
-        $this->view('assessment/list', $data);
+        $this->view('assessment/index', $data);
     }
 
     /**
-     * Display assessment form for a specific learner
-     * Requirements: 5.2
+     * Create/Start initial assessment
+     * Redirects to assessment form for the first approved learner
      */
     public function create()
     {
-        $this->requireSpedRole(['sped_teacher', 'admin']);
+        $this->requireParent();
+
+        $parentId = $this->getCurrentUserId();
+        
+        // Get learners for this parent
+        $learners = $this->learnerModel->getByParent($parentId);
+        
+        if (empty($learners)) {
+            header('Location: ' . URLROOT . '/parent/dashboard?error=No enrolled learners found');
+            exit;
+        }
+        
+        // Get the first learner (or you can let parent choose)
+        $firstLearner = $learners[0];
+        
+        // Redirect to assessment form with learner ID
+        header('Location: ' . URLROOT . '/assessment/form?learner_id=' . $firstLearner->id);
+        exit;
+    }
+
+    /**
+     * Start or continue assessment for a learner
+     */
+    public function form()
+    {
+        $this->requireParent();
 
         $learnerId = $_GET['learner_id'] ?? null;
+
         if (!$learnerId) {
-            die('Learner ID required');
+            header('Location: ' . URLROOT . '/assessment?error=Learner ID required');
+            exit;
         }
 
-        // Verify learner exists and is ready for assessment
+        // Get learner
         $learner = $this->learnerModel->getById($learnerId);
+
         if (!$learner) {
-            die('Learner not found');
-        }
-
-        if ($learner->status !== 'enrolled') {
-            die('Learner is not ready for assessment');
-        }
-
-        // Check if assessment already exists
-        if ($this->assessmentModel->hasAssessment($learnerId)) {
-            header('Location: ' . URLROOT . '/assessment/view?learner_id=' . $learnerId);
+            header('Location: ' . URLROOT . '/assessment?error=Learner not found');
             exit;
         }
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->handleAssessmentSubmission($learnerId);
-        } else {
-            $this->showAssessmentForm($learnerId);
-        }
-    }
-
-    /**
-     * Handle assessment form submission with comprehensive validation
-     * Requirements: 5.3, 5.4, 5.5, 5.6
-     */
-    private function handleAssessmentSubmission($learnerId)
-    {
-        // Validate session integrity
-        if (!$this->validateSessionIntegrity()) {
-            header('Location: ' . URLROOT . '/auth/login?error=session_invalid');
+        // Verify parent owns this learner
+        if ($learner->parent_id != $this->getCurrentUserId()) {
+            header('Location: ' . URLROOT . '/assessment?error=Unauthorized access');
             exit;
         }
-        
-        // Validate and sanitize form input
-        $validationResult = $this->validateFormInput($_POST, 'assessment');
-        
-        if (!$validationResult['success']) {
-            $this->showAssessmentForm($learnerId, $validationResult);
-            return;
-        }
-        
-        $assessmentData = $validationResult['data'];
-        $assessmentData['assessed_by'] = $this->getCurrentUserId();
-        
-        try {
-            // Store assessment as encrypted Assessment_Record
-            $assessmentId = $this->assessmentModel->create($learnerId, $assessmentData);
 
-            if (!$assessmentId) {
-                throw new Exception("Failed to create assessment record");
-            }
-
-            // Change learner status to "Assessment Complete"
-            $statusUpdated = $this->learnerModel->updateStatus($learnerId, 'assessment_complete');
-
-            if (!$statusUpdated) {
-                throw new Exception("Failed to update learner status");
-            }
-
-            // Record action in audit log
-            $this->auditLog->logStatusChange(
-                $this->getCurrentUserId(),
-                'learner',
-                $learnerId,
-                'enrolled',
-                'assessment_complete',
-                'Initial assessment completed'
-            );
-
-            // Log assessment creation
-            $this->auditLog->logDocumentAccess(
-                $this->getCurrentUserId(),
-                $assessmentId,
-                'create',
-                ['learner_id' => $learnerId, 'assessment_type' => 'initial_assessment']
-            );
-
-            // Redirect to assessment view
-            header('Location: ' . URLROOT . '/assessment/view?assessment_id=' . $assessmentId . '&success=Assessment completed successfully');
-            exit;
-
-        } catch (Exception $e) {
-            $errorResponse = $this->errorHandler->handleError(
-                $e,
-                'assessment',
-                $this->getCurrentUserId(),
-                ['learner_id' => $learnerId, 'action' => 'create_assessment']
-            );
-            $this->showAssessmentForm($learnerId, $errorResponse);
-        }
-    }
-
-    /**
-     * Show assessment form
-     */
-    private function showAssessmentForm($learnerId, $data = [])
-    {
-        $learner = $this->learnerModel->getById($learnerId);
-        
-        $data['learner'] = $learner;
-        $data['assessment_date'] = date('Y-m-d'); // Default to today
-        $data['page_title'] = 'Initial Assessment - ' . $learner->first_name . ' ' . $learner->last_name;
-
-        $this->view('assessment/create', $data);
-    }
-
-    /**
-     * Save assessment (for draft functionality)
-     */
-    public function save()
-    {
-        $this->requireSpedRole(['sped_teacher', 'admin']);
-
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            die('Invalid request method');
-        }
-
-        $learnerId = $_POST['learner_id'] ?? null;
-        if (!$learnerId) {
-            die('Learner ID required');
-        }
-
-        // This method can be used for saving drafts or updates
-        // For now, redirect to create method which handles the full submission
-        $this->create();
-    }
-
-    /**
-     * Display assessment data in read-only format
-     * Requirements: 5.7
-     */
-    public function viewAssessment()
-    {
-        $this->requireSpedStaff(); // Allow SPED teachers, guidance, and principals to view
-
-        $assessmentId = $_GET['assessment_id'] ?? null;
-        $learnerId = $_GET['learner_id'] ?? null;
-
-        if ($assessmentId) {
-            $assessment = $this->assessmentModel->getById($assessmentId);
-        } elseif ($learnerId) {
-            $assessment = $this->assessmentModel->getByLearner($learnerId);
-        } else {
-            die('Assessment ID or Learner ID required');
-        }
+        // Get or create assessment
+        $assessment = $this->assessmentModel->getByLearnerId($learnerId);
 
         if (!$assessment) {
-            die('Assessment not found');
+            // Create new assessment
+            $assessmentId = $this->assessmentModel->create($learnerId, 'unlocked');
+            $assessment = $this->assessmentModel->getById($assessmentId);
         }
 
-        // Log assessment access
-        $this->auditLog->logDocumentAccess(
-            $this->getCurrentUserId(),
-            $assessment->id,
-            'view',
-            ['learner_id' => $assessment->learner_id]
-        );
+        // Check if assessment is locked
+        if ($assessment->status === 'locked') {
+            header('Location: ' . URLROOT . '/assessment?error=Assessment is locked. Please wait for enrollment approval.');
+            exit;
+        }
+
+        // Check if already submitted
+        if ($assessment->status === 'submitted' || $assessment->status === 'reviewed') {
+            header('Location: ' . URLROOT . '/assessment/viewAssessment?id=' . $assessment->id);
+            exit;
+        }
+
+        // Auto-fill learner background
+        $learnerBackground = $this->assessmentModel->autoFillLearnerBackground($learnerId);
+
+        // Get existing data if draft
+        $educationHistory = $assessment->education_history ? json_decode($assessment->education_history, true) : [];
+        $additionalInfo = $assessment->additional_info ? json_decode($assessment->additional_info, true) : [];
 
         $data = [
             'assessment' => $assessment,
-            'page_title' => 'Assessment Results - ' . $assessment->first_name . ' ' . $assessment->last_name,
-            'readonly' => true
+            'learner' => $learner,
+            'learner_background' => $learnerBackground,
+            'education_history' => $educationHistory,
+            'additional_info' => $additionalInfo,
+            'role' => $_SESSION['role'] ?? 'parent',
+            'user_name' => $_SESSION['fullname'] ?? 'Parent',
+            'current_page' => 'assessment'
         ];
 
-        parent::view('assessment/view', $data);
+        $this->view('assessment/form', $data);
     }
 
     /**
-     * List all assessments (for SPED teachers to review their work)
+     * Save assessment draft (AJAX)
      */
-    public function myAssessments()
+    public function saveDraft()
     {
-        $this->requireSpedRole(['sped_teacher', 'admin']);
+        $this->requireParent();
 
-        $assessorId = $this->getCurrentUserId();
-        $assessments = $this->assessmentModel->getByAssessor($assessorId);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            exit;
+        }
+
+        $assessmentId = $_POST['assessment_id'] ?? null;
+        $section = $_POST['section'] ?? null;
+        $data = $_POST['data'] ?? [];
+
+        if (!$assessmentId || !$section) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+            exit;
+        }
+
+        // Get assessment
+        $assessment = $this->assessmentModel->getById($assessmentId);
+
+        if (!$assessment) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'Assessment not found']);
+            exit;
+        }
+
+        // Verify parent owns this assessment
+        if ($assessment->parent_id != $this->getCurrentUserId()) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+
+        // Prepare data for saving
+        $saveData = [
+            'learner_background' => $assessment->learner_background ? json_decode($assessment->learner_background, true) : [],
+            'education_history' => $assessment->education_history ? json_decode($assessment->education_history, true) : [],
+            'additional_info' => $assessment->additional_info ? json_decode($assessment->additional_info, true) : []
+        ];
+
+        // Update the specific section
+        $saveData[$section] = $data;
+
+        // Save draft
+        $result = $this->assessmentModel->saveAssessmentDraft($assessmentId, $saveData);
+
+        if ($result) {
+            echo json_encode(['success' => true, 'message' => 'Draft saved successfully']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to save draft']);
+        }
+        exit;
+    }
+
+    /**
+     * Submit assessment
+     */
+    public function submit()
+    {
+        $this->requireParent();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . URLROOT . '/assessment');
+            exit;
+        }
+
+        $assessmentId = $_POST['assessment_id'] ?? null;
+
+        if (!$assessmentId) {
+            header('Location: ' . URLROOT . '/assessment?error=Assessment ID required');
+            exit;
+        }
+
+        // Get assessment
+        $assessment = $this->assessmentModel->getById($assessmentId);
+
+        if (!$assessment) {
+            header('Location: ' . URLROOT . '/assessment?error=Assessment not found');
+            exit;
+        }
+
+        // Verify parent owns this assessment
+        if ($assessment->parent_id != $this->getCurrentUserId()) {
+            header('Location: ' . URLROOT . '/assessment?error=Unauthorized access');
+            exit;
+        }
+
+        // FIRST: Save the form data from POST
+        $learnerBackground = [
+            'personal_info' => [
+                'last_name' => trim($_POST['last_name'] ?? ''),
+                'first_name' => trim($_POST['first_name'] ?? ''),
+                'middle_name' => trim($_POST['middle_name'] ?? ''),
+                'suffix' => trim($_POST['suffix'] ?? ''),
+                'date_of_birth' => trim($_POST['date_of_birth'] ?? ''),
+                'age' => trim($_POST['age'] ?? ''),
+                'sex' => trim($_POST['sex'] ?? ''),
+                'religion' => trim($_POST['religion'] ?? ''),
+                'address' => trim($_POST['address'] ?? ''),
+                'lrn' => trim($_POST['lrn'] ?? ''),
+                'school_year' => trim($_POST['school_year'] ?? ''),
+                'school' => trim($_POST['school'] ?? ''),
+                'adviser' => trim($_POST['adviser'] ?? '')
+            ],
+            'family_background' => [
+                'father_name' => trim($_POST['father_name'] ?? ''),
+                'father_contact' => trim($_POST['father_contact'] ?? ''),
+                'father_occupation' => trim($_POST['father_occupation'] ?? ''),
+                'mother_name' => trim($_POST['mother_name'] ?? ''),
+                'mother_contact' => trim($_POST['mother_contact'] ?? ''),
+                'mother_occupation' => trim($_POST['mother_occupation'] ?? ''),
+                'guardian_name' => trim($_POST['guardian_name'] ?? ''),
+                'guardian_contact' => trim($_POST['guardian_contact'] ?? ''),
+                'guardian_occupation' => trim($_POST['guardian_occupation'] ?? '')
+            ]
+        ];
+
+        $educationHistory = [
+            'previous_school' => trim($_POST['previous_school'] ?? ''),
+            'previous_grade_level' => trim($_POST['previous_grade_level'] ?? ''),
+            'with_iep' => trim($_POST['with_iep'] ?? ''),
+            'with_support_services' => trim($_POST['with_support_services'] ?? ''),
+            'support_services' => $_POST['support_services'] ?? [],
+            'support_services_others' => trim($_POST['support_services_others'] ?? '')
+        ];
+
+        // Assessment Information (Part B)
+        $assessmentInfo = [];
+        if (isset($_POST['assessment_info']) && is_array($_POST['assessment_info'])) {
+            foreach ($_POST['assessment_info'] as $row) {
+                // Only add rows that have at least one field filled
+                if (!empty($row['service']) || !empty($row['mdt_members']) || !empty($row['date']) || !empty($row['documents'])) {
+                    $assessmentInfo[] = [
+                        'service' => trim($row['service'] ?? ''),
+                        'mdt_members' => trim($row['mdt_members'] ?? ''),
+                        'date' => trim($row['date'] ?? ''),
+                        'documents' => trim($row['documents'] ?? '')
+                    ];
+                }
+            }
+        }
+
+        $additionalInfo = [
+            'assessment_info' => $assessmentInfo
+        ];
+
+        // Save the data first
+        $saveData = [
+            'learner_background' => $learnerBackground,
+            'education_history' => $educationHistory,
+            'additional_info' => $additionalInfo
+        ];
+
+        $this->assessmentModel->saveAssessmentDraft($assessmentId, $saveData);
+
+        // THEN: Validate assessment is complete
+        $assessmentData = [
+            'education_history' => $educationHistory
+        ];
+
+        if (!$this->assessmentModel->validateAssessmentComplete($assessmentData)) {
+            header('Location: ' . URLROOT . '/assessment/form?learner_id=' . $assessment->learner_id . '&error=Please complete all required fields in Education History section');
+            exit;
+        }
+
+        // Submit assessment
+        $result = $this->assessmentModel->submitAssessment($assessmentId);
+
+        if ($result) {
+            // Create notification for SPED teachers
+            $this->notifySPEDTeachers($assessmentId);
+
+            // Log submission
+            $this->auditLog->logAction(
+                $this->getCurrentUserId(),
+                'assessment_submit',
+                'Assessment submitted for learner ID: ' . $assessment->learner_id
+            );
+
+            header('Location: ' . URLROOT . '/assessment?success=Assessment submitted successfully');
+        } else {
+            header('Location: ' . URLROOT . '/assessment/form?learner_id=' . $assessment->learner_id . '&error=Failed to submit assessment');
+        }
+        exit;
+    }
+
+    /**
+     * View submitted assessment (read-only)
+     */
+    public function viewAssessment()
+    {
+        $assessmentId = $_GET['id'] ?? null;
+
+        if (!$assessmentId) {
+            header('Location: ' . URLROOT . '/assessment?error=Assessment ID required');
+            exit;
+        }
+
+        $assessment = $this->assessmentModel->getById($assessmentId);
+
+        if (!$assessment) {
+            header('Location: ' . URLROOT . '/assessment?error=Assessment not found');
+            exit;
+        }
+
+        // Check permissions
+        $userRole = $_SESSION['role'] ?? '';
+        $userId = $this->getCurrentUserId();
+
+        if ($userRole === 'parent' && $assessment->parent_id != $userId) {
+            header('Location: ' . URLROOT . '/assessment?error=Unauthorized access');
+            exit;
+        }
+
+        // Decode JSON data
+        $learnerBackground = json_decode($assessment->learner_background, true);
+        $educationHistory = json_decode($assessment->education_history, true);
+        $additionalInfo = json_decode($assessment->additional_info, true);
+
+        $data = [
+            'assessment' => $assessment,
+            'learner_background' => $learnerBackground,
+            'education_history' => $educationHistory,
+            'additional_info' => $additionalInfo,
+            'role' => $userRole,
+            'user_name' => $_SESSION['user_name'] ?? 'User',
+            'current_page' => 'assessment'
+        ];
+
+        $this->view('assessment/view', $data);
+    }
+
+    /**
+     * SPED teacher review page
+     */
+    public function review()
+    {
+        $this->requireSpedStaff();
+
+        // Get all submitted assessments
+        $assessments = $this->assessmentModel->getSubmittedAssessments();
 
         $data = [
             'assessments' => $assessments,
-            'page_title' => 'My Assessments'
+            'role' => $_SESSION['role'] ?? 'sped_teacher',
+            'user_name' => $_SESSION['fullname'] ?? 'SPED Teacher',
+            'current_page' => 'assessment'
         ];
 
-        $this->view('assessment/my_assessments', $data);
+        $this->view('assessment/review', $data);
+    }
+
+    /**
+     * Mark assessment as reviewed
+     */
+    public function markReviewed()
+    {
+        $this->requireSpedStaff();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . URLROOT . '/assessment/review');
+            exit;
+        }
+
+        $assessmentId = $_POST['assessment_id'] ?? null;
+
+        if (!$assessmentId) {
+            header('Location: ' . URLROOT . '/assessment/review?error=Assessment ID required');
+            exit;
+        }
+
+        $result = $this->assessmentModel->markAsReviewed($assessmentId);
+
+        if ($result) {
+            // Log action
+            $this->auditLog->logAction(
+                $this->getCurrentUserId(),
+                'assessment_reviewed',
+                'Assessment ID: ' . $assessmentId . ' marked as reviewed'
+            );
+
+            header('Location: ' . URLROOT . '/assessment/review?success=Assessment marked as reviewed');
+        } else {
+            header('Location: ' . URLROOT . '/assessment/review?error=Failed to mark assessment as reviewed');
+        }
+        exit;
+    }
+
+    /**
+     * Notify SPED teachers about new assessment submission
+     */
+    private function notifySPEDTeachers($assessmentId)
+    {
+        // Get all SPED teachers
+        $userModel = $this->model('User');
+        $spedTeachers = $userModel->getUsersByRole('sped_teacher');
+
+        foreach ($spedTeachers as $teacher) {
+            $this->assessmentModel->createNotification($assessmentId, $teacher->id, 'submitted');
+        }
+    }
+
+    /**
+     * Require parent role
+     */
+    public function requireParent()
+    {
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'parent') {
+            header('Location: ' . URLROOT . '/auth/login');
+            exit;
+        }
+    }
+
+    /**
+     * Require SPED staff role
+     */
+    public function requireSpedStaff()
+    {
+        $allowedRoles = ['sped_teacher', 'guidance', 'admin'];
+        if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], $allowedRoles)) {
+            header('Location: ' . URLROOT . '/auth/login');
+            exit;
+        }
+    }
+
+    /**
+     * Get current user ID
+     */
+    public function getCurrentUserId()
+    {
+        return $_SESSION['user_id'] ?? null;
     }
 }

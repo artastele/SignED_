@@ -106,7 +106,7 @@
                     <?php endif; ?>
 
                     <div class="d-flex gap-2">
-                        <a href="<?php echo URLROOT; ?>/enrollment/view?id=<?php echo $enrollment->id; ?>" 
+                        <a href="<?php echo URLROOT; ?>/enrollment/upload?id=<?php echo $enrollment->id; ?>" 
                            class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-eye me-1"></i>View Details
                         </a>

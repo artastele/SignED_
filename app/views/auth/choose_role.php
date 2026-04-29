@@ -115,13 +115,10 @@
                     <div class="role-title">Principal</div>
                     <div class="role-description">School principal</div>
                 </label>
+            </div>
 
-                <label class="role-card" data-role="learner">
-                    <input type="radio" name="role" value="learner" required>
-                    <div class="role-icon">🎒</div>
-                    <div class="role-title">Learner</div>
-                    <div class="role-description">Student account</div>
-                </label>
+            <div class="alert alert-info" style="margin-top: 15px; padding: 10px; background: #eff6ff; border: 1px solid #3b82f6; border-radius: 6px; font-size: 13px;">
+                <strong>Note:</strong> Learner accounts are automatically created when enrollment is approved. Admin accounts are created manually by system administrators.
             </div>
 
             <button type="submit" class="btn full">Continue</button>

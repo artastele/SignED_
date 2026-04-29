@@ -771,4 +771,29 @@ class LearnerController extends Controller
         $result = $stmt->fetch(PDO::FETCH_OBJ);
         return $result ? $result->id : null;
     }
+
+    /**
+     * Student Records - List of all enrolled learners
+     * For SPED teachers and guidance counselors
+     */
+    public function records()
+    {
+        $this->requireSpedStaff();
+
+        // Get all enrolled learners
+        $learners = $this->learner->getAllEnrolled();
+
+        // Get current user info for sidebar
+        $userModel = $this->model('User');
+        $currentUser = $userModel->getUserById($this->getCurrentUserId());
+        
+        $data = [
+            'learners' => $learners,
+            'role' => $this->getCurrentUserRole(),
+            'user_name' => $currentUser->fullname ?? ($currentUser->first_name . ' ' . $currentUser->last_name),
+            'current_page' => 'records'
+        ];
+
+        $this->view('learner/records', $data);
+    }
 }
