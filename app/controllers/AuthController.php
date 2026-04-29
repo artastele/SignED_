@@ -141,6 +141,13 @@ class AuthController extends Controller
                     header('Location: ' . URLROOT . '/auth/verifyOtp?email=' . urlencode($email));
                     exit;
                 } else {
+                    // Local / debug fallback: allow verification even if SMTP isn't configured.
+                    if (APP_ENV === 'local' || APP_DEBUG) {
+                        $_SESSION['DEBUG_OTP'] = $otp;
+                        header('Location: ' . URLROOT . '/auth/verifyOtp?email=' . urlencode($email) . '&warning=' . urlencode('OTP email failed to send. Use the code shown on this screen to verify.'));
+                        exit;
+                    }
+
                     header('Location: ' . URLROOT . '/auth/register?error=' . urlencode('Registration successful, but OTP email failed to send. Please contact support.'));
                     exit;
                 }
@@ -186,7 +193,13 @@ class AuthController extends Controller
 
         } else {
             $email = isset($_GET['email']) ? $_GET['email'] : '';
-            $data = ['email' => $email];
+            $warning = isset($_GET['warning']) ? $_GET['warning'] : '';
+            $debugOtp = isset($_SESSION['DEBUG_OTP']) ? $_SESSION['DEBUG_OTP'] : '';
+            $data = [
+                'email' => $email,
+                'warning' => $warning,
+                'debug_otp' => $debugOtp
+            ];
             $this->view('auth/verify_otp', $data);
         }
     }

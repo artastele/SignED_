@@ -28,6 +28,19 @@ class Env
         }
 
         if (!file_exists($path)) {
+            // Fall back to example environment file if real .env is not present
+            $examplePath = dirname(__DIR__) . '/.env.example';
+            if (file_exists($examplePath)) {
+                $path = $examplePath;
+            } else {
+                $examplePath = __DIR__ . '/.env.example';
+                if (file_exists($examplePath)) {
+                    $path = $examplePath;
+                }
+            }
+        }
+
+        if (!file_exists($path)) {
             throw new Exception('.env file not found. Please copy .env.example to .env and configure it.');
         }
 

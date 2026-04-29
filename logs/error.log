@@ -6,3 +6,4 @@
 [2026-04-27 08:08:11] [high] [enrollment] [ERR_20260427_080811_e95a1518] SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'learner_dob' cannot be null in C:\xampp\htdocs\SignED_\app\models\Enrollment.php:41 | Data: {"action":"submit_beef"}
 [2026-04-27 08:20:59] [high] [enrollment] [ERR_20260427_082059_24ea719d] SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'learner_dob' cannot be null in C:\xampp\htdocs\SignED_\app\models\Enrollment.php:41 | Data: {"action":"submit_beef"}
 [2026-04-27 08:29:01] [high] [enrollment] [ERR_20260427_082901_2eaf4057] SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'learner_dob' cannot be null in C:\xampp\htdocs\SignED_\app\models\Enrollment.php:41 | Data: {"action":"submit_beef"}
+[2026-04-29 12:52:41] User: guest | IP: ::1 | Error: Access denied: No role assigned to your account. - User: 

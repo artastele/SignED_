@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verified - SignED</title>
-    <link rel="stylesheet" href="<?php echo URLROOT; ?>/assets/css/style.css">
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/public/assets/css/style.css?v=2.0">
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/public/assets/css/auth-modern.css?v=2.0">
 
     <script>
         setTimeout(function () {
@@ -12,7 +13,7 @@
         }, 3000);
     </script>
 </head>
-<body class="auth-body">
+<body class="modern-auth-body">
 
 <div class="auth-container">
     <div class="auth-card" style="text-align:center;">

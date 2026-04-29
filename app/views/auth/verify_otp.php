@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify OTP - SignED</title>
-    <link rel="stylesheet" href="<?php echo URLROOT; ?>/assets/css/style.css">
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/public/assets/css/style.css?v=2.0">
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/public/assets/css/auth-modern.css?v=2.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .logo-container {
             text-align: center;
@@ -44,7 +46,7 @@
         }
     </style>
 </head>
-<body class="auth-body">
+<body class="modern-auth-body">
 
 <?php include '../app/views/partials/simple_popup.php'; ?>
 
@@ -59,6 +61,14 @@
             <h1>OTP Verification</h1>
             <p>Check your email for the code</p>
         </div>
+
+        <?php if (!empty($data['warning'])): ?>
+            <p class="subtitle" style="color: #b45309; font-weight: 600;"><?php echo htmlspecialchars($data['warning']); ?></p>
+        <?php endif; ?>
+
+        <?php if (!empty($data['debug_otp'])): ?>
+            <p class="subtitle" style="color: #0f766e; font-weight: 700;">Development OTP: <?php echo htmlspecialchars($data['debug_otp']); ?></p>
+        <?php endif; ?>
 
         <p class="subtitle">Enter the 6-digit OTP sent to your email.</p>
 
